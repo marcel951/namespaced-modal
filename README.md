@@ -29,7 +29,7 @@ Das Projekt implementiert:
 ### Schritte
 1. Repository klonen:
    ```
-   git clone https://github.com/yourusername/namespaced-modal.git
+   git clone https://github.com/marcel951/namespaced-modal.git
    cd namespaced-modal
    ```
 
