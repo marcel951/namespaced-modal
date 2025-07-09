@@ -1,0 +1,35 @@
+# Standard arithmetic operations
+<math.+> (+ ?a ?b) (: + ?a ?b)
+<math.*> (* ?a ?b) (: * ?a ?b)
+<math.-> (- ?a ?b) (: - ?a ?b)
+<math./> (/ ?a ?b) (: / ?a ?b)
+<math.%> (% ?a ?b) (: % ?a ?b)
+
+# List operations
+<list.length.empty> (length ()) 0
+<list.length.cons> (length (?head . ?tail)) (+ 1 (length ?tail))
+<list.first> (first (?head . ?tail)) ?head
+<list.rest> (rest (?head . ?tail)) ?tail
+<list.cons> (cons ?head ?tail) (?head . ?tail)
+<list.append.empty> (append () ?list) ?list
+<list.append.cons> (append (?head . ?tail) ?list) (?head . (append ?tail ?list))
+<list.reverse.empty> (reverse ()) ()
+<list.reverse.cons> (reverse (?head . ?tail)) (append (reverse ?tail) (?head . ()))
+
+# List utility functions
+<list.empty> (empty? ()) true
+<list.empty> (empty? (?head . ?tail)) false
+<list.second> (second (?first ?second . ?rest)) ?second
+<list.third> (third (?first ?second ?third . ?rest)) ?third
+
+# Boolean operations
+<bool.and> (and true ?b) ?b
+<bool.and> (and false ?b) false
+<bool.or> (or true ?b) true
+<bool.or> (or false ?b) ?b
+<bool.not> (not true) false
+<bool.not> (not false) true
+
+# Conditional operations
+<cond.if> (if true ?then ?else) ?then
+<cond.if> (if false ?then ?else) ?else
