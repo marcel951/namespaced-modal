@@ -1,55 +1,97 @@
-# Standard arithmetic operations
+# ==========================================
+# Mathematische Operationen (math)
+# ==========================================
+
+# Grundrechenarten (als Built-in)
 <math.+> (+ ?a ?b) (: + ?a ?b)
 <math.*> (* ?a ?b) (: * ?a ?b)
 <math.-> (- ?a ?b) (: - ?a ?b)
 <math./> (/ ?a ?b) (: / ?a ?b)
 <math.%> (% ?a ?b) (: % ?a ?b)
 
-# Trigonometrie (als Built-in)
-<math.sin> (sin ?a) (: sin ?a)
-<math.cos> (cos ?a) (: cos ?a)
-<math.tan> (tan ?a) (: tan ?a)
-
-# Potenzieren
+# Potenzieren (verbessert für negative Exponenten mit Division)
 <math.pow.0> (pow ?a 0) 1
 <math.pow.1> (pow ?a 1) ?a
-<math.pow.rec> (pow ?a ?b) (* ?a (pow ?a (- ?b 1)))
+<math.pow.rec.pos> (pow ?a ?b) (* ?a (pow ?a (- ?b 1))) # Gilt nur für ?b > 1
+<math.pow.rec.neg> (pow ?a ?b) (/ 1 (pow ?a (* -1 ?b))) # Gilt nur für ?b < 0
+
+# Fakultätsfunktion (rekursiv)
+<math.fact.0> (fact 0) 1
+<math.fact.rec> (fact ?n) (* ?n (fact (- ?n 1)))
 
 # Fibonacci-Funktion (rekursiv)
 <math.fib.0> (fib 0) 0
 <math.fib.1> (fib 1) 1
 <math.fib.rec> (fib ?n) (+ (fib (- ?n 1)) (fib (- ?n 2)))
 
-# Fakultätsfunktion (rekursiv)
-<math.fact.0> (fact 0) 1
-<math.fact.1> (fact 1) 1
-<math.fact.rec> (fact ?n) (* ?n (fact (- ?n 1)))
+# ==========================================
+# Listenoperationen (list)
+# ==========================================
 
-# List operations
-<list.length.empty> (length ()) 0
-<list.length.cons> (length (?head . ?tail)) (+ 1 (length ?tail))
+# Grundlegende Operationen
 <list.first> (first (?head . ?tail)) ?head
 <list.rest> (rest (?head . ?tail)) ?tail
-<list.cons> (cons ?head ?tail) (?head . ?tail)
+<list.cons> (cons ?item ?list) (?item . ?list)
+<list.empty.true> (empty? ()) true
+<list.empty.false> (empty? (?head . ?tail)) false
+
+# Länge einer Liste
+<list.length.empty> (length ()) 0
+<list.length.cons> (length (?head . ?tail)) (+ 1 (length ?tail))
+
+# Anhängen von Listen
 <list.append.empty> (append () ?list) ?list
-<list.append.cons> (append (?head . ?tail) ?list) (?head . (append ?tail ?list))
+<list.append.cons> (append (?head . ?tail) ?list) (cons ?head (append ?tail ?list))
+
+# Umkehren einer Liste
 <list.reverse.empty> (reverse ()) ()
 <list.reverse.cons> (reverse (?head . ?tail)) (append (reverse ?tail) (?head . ()))
 
-# List utility functions
-<list.empty> (empty? ()) true
-<list.empty> (empty? (?head . ?tail)) false
+# Zugriff auf Elemente
 <list.second> (second (?first ?second . ?rest)) ?second
 <list.third> (third (?first ?second ?third . ?rest)) ?third
+<list.last.single> (last (?head . ())) ?head
+<list.last.rec> (last (?head . ?tail)) (last ?tail)
 
-# Boolean operations
-<bool.and> (and true ?b) ?b
-<bool.and> (and false ?b) false
-<bool.or> (or true ?b) true
-<bool.or> (or false ?b) ?b
-<bool.not> (not true) false
-<bool.not> (not false) true
+# Aggregationsfunktionen
+<list.sum.empty> (sum ()) 0
+<list.sum.rec> (sum (?h . ?t)) (+ ?h (sum ?t))
+<list.product.empty> (product ()) 1
+<list.product.rec> (product (?h . ?t)) (* ?h (product ?t))
 
-# Conditional operations
-<cond.if> (if true ?then ?else) ?then
-<cond.if> (if false ?then ?else) ?else
+# Teil-Listen
+<list.take.zero> (take 0 ?list) ()
+<list.take.empty> (take ?n ()) ()
+<list.take.rec> (take ?n (?h . ?t)) (cons ?h (take (- ?n 1) ?t))
+<list.drop.zero> (drop 0 ?list) ?list
+<list.drop.empty> (drop ?n ()) ()
+<list.drop.rec> (drop ?n (?h . ?t)) (drop (- ?n 1) ?t)
+
+# ==========================================
+# Boolesche Logik (bool)
+# ==========================================
+
+<bool.and.false> (and false ?b) false
+<bool.and.true> (and true ?b) ?b
+<bool.or.true> (or true ?b) true
+<bool.or.false> (or false ?b) ?b
+<bool.not.true> (not true) false
+<bool.not.false> (not false) true
+
+# ==========================================
+# Vergleichsoperationen (comp)
+# ==========================================
+
+# Annahme: Die rechte Seite wird durch Built-ins im Interpreter ersetzt
+<comp.eq> (== ?a ?b) (: == ?a ?b)
+<comp.neq> (!= ?a ?b) (not (== ?a ?b))
+<comp.lt> (< ?a ?b) (: < ?a ?b)
+<comp.gt> (> ?a ?b) (: > ?a ?b)
+<comp.lte> (<= ?a ?b) (or (< ?a ?b) (== ?a ?b))
+<comp.gte> (>= ?a ?b) (or (> ?a ?b) (== ?a ?b))
+
+# ==========================================
+# Bedingte Ausdrücke (cond)
+# ==========================================
+<cond.if.true> (if true ?then ?else) ?then
+<cond.if.false> (if false ?then ?else) ?else
