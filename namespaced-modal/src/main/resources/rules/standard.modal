@@ -5,6 +5,26 @@
 <math./> (/ ?a ?b) (: / ?a ?b)
 <math.%> (% ?a ?b) (: % ?a ?b)
 
+# Trigonometrie (als Built-in)
+<math.sin> (sin ?a) (: sin ?a)
+<math.cos> (cos ?a) (: cos ?a)
+<math.tan> (tan ?a) (: tan ?a)
+
+# Potenzieren
+<math.pow.0> (pow ?a 0) 1
+<math.pow.1> (pow ?a 1) ?a
+<math.pow.rec> (pow ?a ?b) (* ?a (pow ?a (- ?b 1)))
+
+# Fibonacci-Funktion (rekursiv)
+<math.fib.0> (fib 0) 0
+<math.fib.1> (fib 1) 1
+<math.fib.rec> (fib ?n) (+ (fib (- ?n 1)) (fib (- ?n 2)))
+
+# Fakultätsfunktion (rekursiv)
+<math.fact.0> (fact 0) 1
+<math.fact.1> (fact 1) 1
+<math.fact.rec> (fact ?n) (* ?n (fact (- ?n 1)))
+
 # List operations
 <list.length.empty> (length ()) 0
 <list.length.cons> (length (?head . ?tail)) (+ 1 (length ?tail))
