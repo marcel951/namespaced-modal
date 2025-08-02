@@ -136,8 +136,9 @@ public class REPL {
             System.out.println("DEBUG: Result: " + result);
         }
 
-        // Always print result in quiet mode
-        if (debugger.getMode() == Debugger.Mode.QUIET) {
+        if (debugger.getMode() == Debugger.Mode.QUIET ||
+                debugger.getMode() == Debugger.Mode.STEP_BY_STEP ||
+                debugger.getMode() == Debugger.Mode.TRACE) {
             System.out.println(result);
         }
     }
