@@ -65,7 +65,11 @@ public class DynamicRuleParser {
         }
 
         if (namespace.contains(" ") || name.contains(" ")) {
-            throw new IllegalArgumentException("Namespace und Name dürfen keine Leerzeichen enthalten.");
+            throw new IllegalArgumentException("Namespace and name must not be empty.");
+        }
+
+        if (namespace.contains(" ") || name.contains(" ")) {
+            throw new IllegalArgumentException("Namespace and name must not contain spaces.");
         }
 
         // Parse pattern and replacement
