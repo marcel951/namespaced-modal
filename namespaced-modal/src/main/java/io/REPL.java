@@ -1,3 +1,4 @@
+
 package io;
 
 import core.RuleSet;
@@ -42,6 +43,8 @@ public class REPL {
 
                 if (line.startsWith(":")) {
                     handleCommand(line.trim());
+                } else if (DynamicRuleParser.isDynamicRuleCommand(line.trim())) {
+                    handleDynamicRule(line.trim());
                 } else {
                     evaluateExpression(line.trim());
                 }
@@ -51,6 +54,26 @@ public class REPL {
                     e.printStackTrace();
                 }
             }
+        }
+    }
+
+    private void handleDynamicRule(String input) {
+        try {
+            DynamicRuleParser.ParseResult result = DynamicRuleParser.parse(input);
+
+            if (result.getType() == DynamicRuleParser.ParseResult.Type.ADD) {
+                ruleSet.addRule(result.getRule());
+                System.out.println("Regel " + result.getRule().fullName() + " hinzugefügt");
+            } else if (result.getType() == DynamicRuleParser.ParseResult.Type.REMOVE) {
+                int removedCount = ruleSet.removeRule(result.getFullName());
+                if (removedCount > 0) {
+                    System.out.println(removedCount + " Regel" + (removedCount > 1 ? "n" : "") + " für " + result.getFullName() + " entfernt");
+                } else {
+                    System.out.println("Regel " + result.getFullName() + " nicht gefunden");
+                }
+            }
+        } catch (IllegalArgumentException e) {
+            System.err.println("Fehler beim Parsen der Regel: " + e.getMessage());
         }
     }
 
@@ -86,9 +109,15 @@ public class REPL {
         System.out.println("  :namespaces          Show all available namespaces");
         System.out.println("  :exit                 Exit the REPL");
         System.out.println();
+        System.out.println("Dynamic rule management:");
+        System.out.println("  <namespace.name>pattern replacement    Add a new rule");
+        System.out.println("  >namespace.name<                       Remove rule(s)");
+        System.out.println();
         System.out.println("Examples:");
-        System.out.println("  (+ (* 5 9) 13)       Evaluate arithmetic expression");
-        System.out.println("  (length (1 2 3))     Use list operations");
+        System.out.println("  (+ (* 5 9) 13)                        Evaluate arithmetic expression");
+        System.out.println("  (length (1 2 3))                      Use list operations");
+        System.out.println("  <math.double>(?x) (* ?x 2)             Add doubling rule");
+        System.out.println("  >math.double<                          Remove doubling rule");
     }
 
     private void setMode(String mode) {
