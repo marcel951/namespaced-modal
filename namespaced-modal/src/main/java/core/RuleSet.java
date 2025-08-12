@@ -16,6 +16,35 @@ public class RuleSet {
         }
     }
 
+    public int removeRule(String fullName) {
+        int removedCount = 0;
+
+        // Remove from allRules list
+        Iterator<Rule> allRulesIterator = allRules.iterator();
+        while (allRulesIterator.hasNext()) {
+            Rule rule = allRulesIterator.next();
+            if (rule.fullName().equals(fullName)) {
+                allRulesIterator.remove();
+                removedCount++;
+            }
+        }
+
+        // Remove from function index
+        Iterator<Map.Entry<String, java.util.List<Rule>>> functionIterator = rulesByFunction.entrySet().iterator();
+        while (functionIterator.hasNext()) {
+            Map.Entry<String, java.util.List<Rule>> entry = functionIterator.next();
+            java.util.List<Rule> rules = entry.getValue();
+            rules.removeIf(rule -> rule.fullName().equals(fullName));
+
+            // Remove empty lists from function index
+            if (rules.isEmpty()) {
+                functionIterator.remove();
+            }
+        }
+
+        return removedCount;
+    }
+
     private String extractFunctionSymbol(Term pattern) {
         if (pattern instanceof Term.List list && !list.isEmpty()) {
             return list.getFunctionSymbol();

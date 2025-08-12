@@ -95,3 +95,113 @@
 # ==========================================
 <cond.if.true> (if true ?then ?else) ?then
 <cond.if.false> (if false ?then ?else) ?else
+
+# ==========================================
+# Einheitenrechnung (units)
+# ==========================================
+
+# Definition von Basiseinheiten
+<units.meter> (unit m length) (unit m length)
+<units.kilogram> (unit kg mass) (unit kg mass)
+<units.second> (unit s time) (unit s time)
+<units.ampere> (unit A current) (unit A current)
+<units.kelvin> (unit K temperature) (unit K temperature)
+<units.mole> (unit mol amount) (unit mol amount)
+<units.candela> (unit cd luminosity) (unit cd luminosity)
+
+# Erstellen von Werten mit Einheiten
+<units.value> (with-unit ?value ?unit) (value ?value ?unit)
+
+# Grundrechenarten mit gleichen Einheiten
+<units.add.same> (+ (value ?a ?unit) (value ?b ?unit)) (value (+ ?a ?b) ?unit)
+<units.sub.same> (- (value ?a ?unit) (value ?b ?unit)) (value (- ?a ?b) ?unit)
+
+# Multiplikation mit Einheiten
+<units.mul.scalar.left> (* ?scalar (value ?val ?unit)) (value (* ?scalar ?val) ?unit)
+<units.mul.scalar.right> (* (value ?val ?unit) ?scalar) (value (* ?val ?scalar) ?unit)
+<units.mul.units> (* (value ?a ?unit1) (value ?b ?unit2)) (value (* ?a ?b) (mul-unit ?unit1 ?unit2))
+
+# Division mit Einheiten
+<units.div.scalar> (/ (value ?val ?unit) ?scalar) (value (/ ?val ?scalar) ?unit)
+<units.div.units> (/ (value ?a ?unit1) (value ?b ?unit2)) (value (/ ?a ?b) (div-unit ?unit1 ?unit2))
+
+# Einheitenmultiplikation und -division
+<units.mul.same> (mul-unit ?unit ?unit) (pow-unit ?unit 2)
+<units.div.same> (div-unit ?unit ?unit) dimensionless
+<units.mul.commute> (mul-unit ?unit1 ?unit2) (mul-unit ?unit2 ?unit1)
+
+# Häufige abgeleitete Einheiten
+<units.area.m2> (mul-unit m m) m²
+<units.volume.m3> (mul-unit m² m) m³
+<units.speed.ms> (div-unit m s) (m/s)
+<units.acceleration.ms2> (div-unit (m/s) s) (m/s²)
+<units.force.newton> (mul-unit kg (m/s²)) N
+<units.energy.joule> (mul-unit N m) J
+<units.power.watt> (div-unit J s) W
+
+# Längeneinheiten und Konversionen
+<units.mm.def> (unit mm length) (value 0.001 m)
+<units.cm.def> (unit cm length) (value 0.01 m)
+<units.km.def> (unit km length) (value 1000 m)
+<units.inch.def> (unit in length) (value 0.0254 m)
+<units.foot.def> (unit ft length) (value 0.3048 m)
+
+# Masseneinheiten
+<units.gram.def> (unit g mass) (value 0.001 kg)
+<units.tonne.def> (unit t mass) (value 1000 kg)
+<units.pound.def> (unit lb mass) (value 0.453592 kg)
+
+# Zeiteinheiten
+<units.minute.def> (unit min time) (value 60 s)
+<units.hour.def> (unit h time) (value 3600 s)
+<units.day.def> (unit d time) (value 86400 s)
+
+# Temperaturkonversionen
+<units.celsius.to.kelvin> (to-kelvin (value ?c °C)) (value (+ ?c 273.15) K)
+<units.fahrenheit.to.kelvin> (to-kelvin (value ?f °F)) (value (* (+ ?f 459.67) (/ 5 9)) K)
+<units.kelvin.to.celsius> (to-celsius (value ?k K)) (value (- ?k 273.15) °C)
+<units.kelvin.to.fahrenheit> (to-fahrenheit (value ?k K)) (value (- (* ?k (/ 9 5)) 459.67) °F)
+
+
+# Einheitenkonversion
+<units.convert.same> (convert (value ?val ?unit) ?unit) (value ?val ?unit)
+<units.convert.base> (convert (value ?val ?from) ?to) (if (convertible? ?from ?to) (value (* ?val (conversion-factor ?from ?to)) ?to) error)
+
+# Konversionsfaktoren für Längen
+<units.conv.mm.m> (conversion-factor mm m) 0.001
+<units.conv.cm.m> (conversion-factor cm m) 0.01
+<units.conv.km.m> (conversion-factor km m) 1000
+<units.conv.in.m> (conversion-factor in m) 0.0254
+<units.conv.ft.m> (conversion-factor ft m) 0.3048
+
+# Umgekehrte Konversionen
+<units.conv.reverse> (conversion-factor ?from ?to) (/ 1 (conversion-factor ?to ?from))
+
+# Dimensionsanalyse
+<units.dimension.length> (dimension m) length
+<units.dimension.mass> (dimension kg) mass
+<units.dimension.time> (dimension s) time
+<units.dimension.area> (dimension m²) (pow length 2)
+<units.dimension.volume> (dimension m³) (pow length 3)
+<units.dimension.speed> (dimension (m/s)) (div length time)
+<units.dimension.force> (dimension N) (div (* mass length) (pow time 2))
+
+# Einheitenvalidierung
+<units.compatible.same> (compatible? ?unit ?unit) true
+<units.compatible.dimension> (compatible? ?unit1 ?unit2) (== (dimension ?unit1) (dimension ?unit2))
+
+# Hilfsfunktionen für Einheiten
+<units.get.value> (get-value (value ?val ?unit)) ?val
+<units.get.unit> (get-unit (value ?val ?unit)) ?unit
+<units.dimensionless.value> (get-value ?val) ?val  # Für dimensionslose Werte
+<units.dimensionless.unit> (get-unit ?val) dimensionless  # Für dimensionslose Werte
+
+# Potenzen von Einheiten
+<units.pow.1> (pow-unit ?unit 1) ?unit
+<units.pow.0> (pow-unit ?unit 0) dimensionless
+<units.pow.combine> (pow-unit (pow-unit ?unit ?n) ?m) (pow-unit ?unit (* ?n ?m))
+
+# Quadratwurzel von Einheiten
+<units.sqrt.pow2> (sqrt-unit (pow-unit ?unit 2)) ?unit
+<units.sqrt.area> (sqrt-unit m²) m
+<units.sqrt.dimensionless> (sqrt-unit dimensionless) dimensionless
