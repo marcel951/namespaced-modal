@@ -164,10 +164,10 @@
 
 # Einheitenkonversion
 <units.convert.same> (convert (value ?val ?unit) ?unit) (value ?val ?unit)
-<units.convert.base> (convert (value ?val ?from) ?to)
-    (if (convertible? ?from ?to)
-        (value (* ?val (conversion-factor ?from ?to)) ?to)
-        error)
+#<units.convert.base> (convert (value ?val ?from) ?to)
+#    (if (convertible? ?from ?to)
+#        (value (* ?val (conversion-factor ?from ?to)) ?to)
+#        error)
 
 # Konversionsfaktoren für Längen
 <units.conv.mm.m> (conversion-factor mm m) 0.001
@@ -190,8 +190,8 @@
 
 # Einheitenvalidierung
 <units.compatible.same> (compatible? ?unit ?unit) true
-<units.compatible.dimension> (compatible? ?unit1 ?unit2)
-    (== (dimension ?unit1) (dimension ?unit2))
+#<units.compatible.dimension> (compatible? ?unit1 ?unit2)
+#    (== (dimension ?unit1) (dimension ?unit2))
 
 # Hilfsfunktionen für Einheiten
 <units.get.value> (get-value (value ?val ?unit)) ?val
