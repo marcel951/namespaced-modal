@@ -147,7 +147,7 @@ public class DynamicRuleParser {
             // Pattern is a single atom - find the first space
             int spaceIndex = rest.indexOf(' ');
             if (spaceIndex == -1) {
-                throw new IllegalArgumentException("Replacement fehlt");
+                throw new IllegalArgumentException("Replacement missing");
             }
 
             String pattern = rest.substring(0, spaceIndex);
