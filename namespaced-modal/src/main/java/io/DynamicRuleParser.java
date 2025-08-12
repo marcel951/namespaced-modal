@@ -88,7 +88,7 @@ public class DynamicRuleParser {
             Rule rule = new Rule(namespace, name, pattern, replacement);
             return ParseResult.addRule(rule);
         } catch (Exception e) {
-            throw new IllegalArgumentException("Syntaxfehler beim Parsen: " + e.getMessage(), e);
+            throw new IllegalArgumentException("Syntax error while parsing: " + e.getMessage(), e);
         }
     }
 
