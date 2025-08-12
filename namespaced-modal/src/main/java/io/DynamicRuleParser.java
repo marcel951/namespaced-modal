@@ -132,7 +132,14 @@ public class DynamicRuleParser {
             String replacement = rest.substring(i + 1).trim();
 
             if (replacement.isEmpty()) {
-                throw new IllegalArgumentException("Replacement fehlt");
+                throw new IllegalArgumentException("Unbalanced parentheses in pattern");
+            }
+
+            String pattern = rest.substring(0, i + 1);
+            String replacement = rest.substring(i + 1).trim();
+
+            if (replacement.isEmpty()) {
+                throw new IllegalArgumentException("Replacement is missing");
             }
 
             return new String[]{pattern, replacement};
