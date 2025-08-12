@@ -98,7 +98,7 @@ public class DynamicRuleParser {
 
         // Validate namespace and name
         if (namespace.isEmpty() || name.isEmpty()) {
-            throw new IllegalArgumentException("Namespace und Name dürfen nicht leer sein.");
+            throw new IllegalArgumentException("Namespace and name must not be empty.");
         }
 
         String fullName = namespace + "." + name;
