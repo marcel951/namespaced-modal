@@ -5,18 +5,39 @@ import core.Term;
 import core.Rewriter;
 import debug.Debugger;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.util.List;
+import java.util.ArrayList;
+
+import org.jline.console.SystemRegistry;
+import org.jline.console.impl.Builtins;
+import org.jline.console.impl.SystemRegistryImpl;
+import org.jline.keymap.KeyMap;
+import org.jline.reader.*;
+import org.jline.reader.impl.DefaultParser;
+import org.jline.reader.impl.LineReaderImpl;
+import org.jline.terminal.Terminal;
+import org.jline.terminal.TerminalBuilder;
 
 public class REPL {
     private final RuleSet ruleSet;
-    private final BufferedReader reader;
+    private final LineReader reader;
+    private final Terminal terminal;
     private Debugger debugger;
 
-    public REPL(RuleSet ruleSet) {
+    public REPL(RuleSet ruleSet) throws IOException {
         this.ruleSet = ruleSet;
-        this.reader = new BufferedReader(new InputStreamReader(System.in));
+        this.terminal = TerminalBuilder.builder()
+                .system(true)
+                .build();
+
+        // Erstelle LineReader mit Auto-Vervollständigung
+        this.reader = LineReaderBuilder.builder()
+                .terminal(terminal)
+                .completer(new REPLCompleter())
+                .parser(new DefaultParser())
+                .build();
+
         this.debugger = new Debugger(Debugger.Mode.QUIET);
     }
 
@@ -24,36 +45,94 @@ public class REPL {
         System.out.println("Namespaced-Modal Term-Rewriting Language");
         System.out.println("Loaded " + ruleSet.size() + " rules");
         System.out.println("Type :help for commands or :exit to quit");
+        System.out.println("Use ↑/↓ for history, Tab for completion");
         System.out.println();
 
-        while (true) {
-            System.out.print("> ");
-            String line = reader.readLine();
-
-            if (line == null || ":exit".equals(line.trim())) {
-                System.out.println("Goodbye!");
-                break;
-            }
-
-            try {
-                if (line.trim().isEmpty()) {
+        try {
+            while (true) {
+                String line;
+                try {
+                    line = reader.readLine("> ");
+                } catch (UserInterruptException e) {
+                    // Ctrl+C gedrückt
                     continue;
+                } catch (EndOfFileException e) {
+                    // Ctrl+D gedrückt oder EOF
+                    System.out.println("Goodbye!");
+                    break;
                 }
 
-                if (line.startsWith(":")) {
-                    handleCommand(line.trim());
-                } else {
-                    evaluateExpression(line.trim());
+                if (line == null || ":exit".equals(line.trim())) {
+                    System.out.println("Goodbye!");
+                    break;
                 }
-            } catch (Exception e) {
-                System.err.println("Error: " + e.getMessage());
-                if (debugger.getMode() == Debugger.Mode.DEBUG) {
-                    e.printStackTrace();
+
+                try {
+                    if (line.trim().isEmpty()) {
+                        continue;
+                    }
+
+                    if (line.startsWith(":")) {
+                        handleCommand(line.trim());
+                    } else {
+                        evaluateExpression(line.trim());
+                    }
+                } catch (Exception e) {
+                    System.err.println("Error: " + e.getMessage());
+                    if (debugger.getMode() == Debugger.Mode.DEBUG) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        } finally {
+            terminal.close();
+        }
+    }
+
+    // Auto-Vervollständigung implementieren
+    private class REPLCompleter implements Completer {
+        private final List<String> commands = List.of(
+                ":help", ":mode", ":rules", ":namespaces", ":exit"
+        );
+
+        private final List<String> modes = List.of(
+                "debug", "trace", "quiet", "step-by-step"
+        );
+
+        @Override
+        public void complete(LineReader reader, ParsedLine line, List<Candidate> candidates) {
+            String buffer = line.line();
+
+            if (buffer.startsWith(":")) {
+                // Vervollständige Kommandos
+                if (buffer.startsWith(":mode ")) {
+                    String partial = buffer.substring(6);
+                    modes.stream()
+                            .filter(mode -> mode.startsWith(partial))
+                            .forEach(mode -> candidates.add(new Candidate(":mode " + mode)));
+                } else if (buffer.startsWith(":rules ")) {
+                    String partial = buffer.substring(7);
+                    ruleSet.getNamespaces().stream()
+                            .filter(ns -> ns.startsWith(partial))
+                            .forEach(ns -> candidates.add(new Candidate(":rules " + ns)));
+                } else {
+                    commands.stream()
+                            .filter(cmd -> cmd.startsWith(buffer))
+                            .forEach(cmd -> candidates.add(new Candidate(cmd)));
+                }
+            } else {
+                // Vervollständige Namespaces für Ausdrücke
+                String word = line.word();
+                if (word != null && !word.isEmpty()) {
+                    ruleSet.getNamespaces().stream()
+                            .filter(ns -> ns.startsWith(word))
+                            .forEach(ns -> candidates.add(new Candidate(ns)));
                 }
             }
         }
     }
 
+    // Restliche Methoden bleiben unverändert...
     private void handleCommand(String command) {
         String[] parts = command.split("\\s+");
 
@@ -85,6 +164,12 @@ public class REPL {
         System.out.println("  :rules [namespace]    Show rules (all or for specific namespace)");
         System.out.println("  :namespaces          Show all available namespaces");
         System.out.println("  :exit                 Exit the REPL");
+        System.out.println();
+        System.out.println("Navigation:");
+        System.out.println("  ↑/↓                   Browse command history");
+        System.out.println("  Tab                   Auto-complete commands/namespaces");
+        System.out.println("  Ctrl+C                Cancel current input");
+        System.out.println("  Ctrl+D                Exit");
         System.out.println();
         System.out.println("Examples:");
         System.out.println("  (+ (* 5 9) 13)       Evaluate arithmetic expression");
