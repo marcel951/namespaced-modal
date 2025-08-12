@@ -78,7 +78,7 @@ public class DynamicRuleParser {
         String replacementStr = parts[1];
 
         if (patternStr.isEmpty() || replacementStr.isEmpty()) {
-            throw new IllegalArgumentException("Pattern und Replacement dürfen nicht leer sein.");
+            throw new IllegalArgumentException("Pattern and replacement must not be empty.");
         }
 
         try {
