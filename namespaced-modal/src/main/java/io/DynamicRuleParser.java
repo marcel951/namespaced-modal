@@ -51,7 +51,7 @@ public class DynamicRuleParser {
             return parseRemoveRule(removeMatcher);
         }
 
-        throw new IllegalArgumentException("Ungültige Regelsyntax. Verwende <namespace.name>pattern replacement zum Hinzufügen oder >namespace.name< zum Entfernen.");
+        throw new IllegalArgumentException("Invalid rule syntax. Use <namespace.name>pattern replacement to add or >namespace.name< to remove.");
     }
 
     private static ParseResult parseAddRule(Matcher matcher) {
