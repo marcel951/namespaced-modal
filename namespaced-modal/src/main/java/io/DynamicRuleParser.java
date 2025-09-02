@@ -45,7 +45,7 @@ public class DynamicRuleParser {
             return parseAddRule(addMatcher);
         }
 
-        // Try parsing remove rule syntax
+
         Matcher removeMatcher = REMOVE_RULE_PATTERN.matcher(input);
         if (removeMatcher.matches()) {
             return parseRemoveRule(removeMatcher);
@@ -59,26 +59,22 @@ public class DynamicRuleParser {
         String name = matcher.group(2);
         String rest = matcher.group(3).trim();
 
-        // Validate namespace and name
+
         if (namespace.isEmpty() || name.isEmpty()) {
             throw new IllegalArgumentException("Namespace und Name dürfen nicht leer sein.");
         }
 
         if (namespace.contains(" ") || name.contains(" ")) {
-            throw new IllegalArgumentException("Namespace and name must not be empty.");
+            throw new IllegalArgumentException("Namespace und Name dürfen keine Leerzeichen enthalten.");
         }
 
-        if (namespace.contains(" ") || name.contains(" ")) {
-            throw new IllegalArgumentException("Namespace and name must not contain spaces.");
-        }
 
-        // Parse pattern and replacement
         String[] parts = parsePatternAndReplacement(rest);
         String patternStr = parts[0];
         String replacementStr = parts[1];
 
         if (patternStr.isEmpty() || replacementStr.isEmpty()) {
-            throw new IllegalArgumentException("Pattern and replacement must not be empty.");
+            throw new IllegalArgumentException("Pattern und Ersetzung dürfen nicht leer sein.");
         }
 
         try {
@@ -88,7 +84,7 @@ public class DynamicRuleParser {
             Rule rule = new Rule(namespace, name, pattern, replacement);
             return ParseResult.addRule(rule);
         } catch (Exception e) {
-            throw new IllegalArgumentException("Syntax error while parsing: " + e.getMessage(), e);
+            throw new IllegalArgumentException("Syntaxfehler beim Parsen: " + e.getMessage(), e);
         }
     }
 
@@ -107,7 +103,6 @@ public class DynamicRuleParser {
 
     private static String[] parsePatternAndReplacement(String rest) {
         if (rest.startsWith("(")) {
-            // Pattern starts with '(' - find the matching closing parenthesis
             int depth = 0;
             int i = 0;
 
@@ -132,14 +127,7 @@ public class DynamicRuleParser {
             String replacement = rest.substring(i + 1).trim();
 
             if (replacement.isEmpty()) {
-                throw new IllegalArgumentException("Unbalanced parentheses in pattern");
-            }
-
-            String pattern = rest.substring(0, i + 1);
-            String replacement = rest.substring(i + 1).trim();
-
-            if (replacement.isEmpty()) {
-                throw new IllegalArgumentException("Replacement is missing");
+                throw new IllegalArgumentException("Ersetzung fehlt");
             }
 
             return new String[]{pattern, replacement};
@@ -147,7 +135,7 @@ public class DynamicRuleParser {
             // Pattern is a single atom - find the first space
             int spaceIndex = rest.indexOf(' ');
             if (spaceIndex == -1) {
-                throw new IllegalArgumentException("Replacement missing");
+                throw new IllegalArgumentException("Ersetzung fehlt");
             }
 
             String pattern = rest.substring(0, spaceIndex);

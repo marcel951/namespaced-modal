@@ -4,24 +4,29 @@ import io.TermParser;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import static org.junit.jupiter.api.Assertions.*;
+import io.RuleParser;
+import debug.Debugger;
+
 
 public class EvaluatorTest {
-    
-    private RuleLoader ruleLoader;
+
+    private RuleSet ruleSet;
     private Rewriter rewriter;
-    
+    private Debugger debugger;
+
     @BeforeEach
     public void setUp() {
-        ruleLoader = new RuleLoader();
-        ruleLoader.loadRules();
-        rewriter = new Rewriter(ruleLoader.getRules());
+        ruleSet = RuleParser.loadFromResource("rules/standard.modal");
+        debugger = new Debugger(Debugger.Mode.QUIET);
+        rewriter = new Rewriter(ruleSet, debugger);
     }
-    
+
     private Term evaluate(String input) {
         Term term = TermParser.parse(input);
         Term rewritten = rewriter.rewrite(term);
         return Evaluator.evaluate(rewritten);
     }
+
 
     // ==========================================
     // Existing Basic Tests
