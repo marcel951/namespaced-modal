@@ -51,6 +51,7 @@ tasks.withType<JavaExec> {
         "--enable-preview",
         "--enable-native-access=ALL-UNNAMED"
     )
+    standardInput = System.`in`
 }
 
 // Shadow JAR konfigurieren (Fat JAR)
