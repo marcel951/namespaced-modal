@@ -2,14 +2,9 @@
 # Mathematische Operationen (math)
 # ==========================================
 
-# Grundrechenarten (als Built-in)
-<math.+> (+ ?a ?b) (: + ?a ?b)
-<math.*> (* ?a ?b) (: * ?a ?b)
-<math.-> (- ?a ?b) (: - ?a ?b)
-<math./> (/ ?a ?b) (: / ?a ?b)
-<math.%> (% ?a ?b) (: % ?a ?b)
 
-# Potenzieren (verbessert für negative Exponenten mit Division)
+
+# Potenzieren
 <math.pow.0> (pow ?a 0) 1
 <math.pow.1> (pow ?a 1) ?a
 <math.pow.rec.pos> (pow ?a ?b) (* ?a (pow ?a (- ?b 1))) # Gilt nur für ?b > 1
@@ -24,6 +19,7 @@
 <math.fib.1> (fib 1) 1
 <math.fib.rec> (fib ?n) (+ (fib (- ?n 1)) (fib (- ?n 2)))
 
+
 # ==========================================
 # Listenoperationen (list)
 # ==========================================
@@ -31,7 +27,12 @@
 # Grundlegende Operationen
 <list.first> (first (?head . ?tail)) ?head
 <list.rest> (rest (?head . ?tail)) ?tail
-<list.cons> (cons ?item ?list) (?item . ?list)
+
+# Cons-Regeln für flache Listen
+<list.cons.empty> (cons ?item ()) (?item)
+<list.cons.single> (cons ?item (?first)) (?item ?first)
+<list.cons.multi> (cons ?item (?first ?second . ?rest)) (?item ?first ?second . ?rest)
+
 <list.empty.true> (empty? ()) true
 <list.empty.false> (empty? (?head . ?tail)) false
 
@@ -41,31 +42,61 @@
 
 # Anhängen von Listen
 <list.append.empty> (append () ?list) ?list
-<list.append.cons> (append (?head . ?tail) ?list) (cons ?head (append ?tail ?list))
+<list.append.single> (append (?head) ?list) (cons ?head ?list)
+<list.append.two> (append (?head ?second) ?list) (cons ?head (cons ?second ?list))
+<list.append.multi> (append (?head ?second ?third . ?rest) ?list) (cons ?head (append (?second ?third . ?rest) ?list))
 
 # Umkehren einer Liste
 <list.reverse.empty> (reverse ()) ()
-<list.reverse.cons> (reverse (?head . ?tail)) (append (reverse ?tail) (?head . ()))
+<list.reverse.single> (reverse (?head)) (?head)
+<list.reverse.two> (reverse (?first ?second)) (?second ?first)
+<list.reverse.three> (reverse (?first ?second ?third)) (?third ?second ?first)
+<list.reverse.multi> (reverse (?head . ?tail)) (append (reverse ?tail) (?head))
+
 
 # Zugriff auf Elemente
-<list.second> (second (?first ?second . ?rest)) ?second
-<list.third> (third (?first ?second ?third . ?rest)) ?third
-<list.last.single> (last (?head . ())) ?head
-<list.last.rec> (last (?head . ?tail)) (last ?tail)
+<list.second.two> (second (?first ?second)) ?second
+<list.second.three> (second (?first ?second ?third)) ?second
+<list.second.four> (second (?first ?second ?third ?fourth)) ?second
+<list.second.multi> (second (?first ?second . ?rest)) ?second
+
+<list.third.three> (third (?first ?second ?third)) ?third
+<list.third.four> (third (?first ?second ?third ?fourth)) ?third
+<list.third.multi> (third (?first ?second ?third . ?rest)) ?third
+
+<list.last.single> (last (?head)) ?head
+<list.last.two> (last (?first ?second)) ?second
+<list.last.three> (last (?first ?second ?third)) ?third
+<list.last.multi> (last (?head . ?tail)) (last ?tail)
+
 
 # Aggregationsfunktionen
 <list.sum.empty> (sum ()) 0
-<list.sum.rec> (sum (?h . ?t)) (+ ?h (sum ?t))
+<list.sum.single> (sum (?h)) ?h
+<list.sum.multi> (sum (?h . ?t)) (+ ?h (sum ?t))
 <list.product.empty> (product ()) 1
-<list.product.rec> (product (?h . ?t)) (* ?h (product ?t))
+<list.product.single> (product (?h)) ?h
+<list.product.multi> (product (?h . ?t)) (* ?h (product ?t))
 
 # Teil-Listen
 <list.take.zero> (take 0 ?list) ()
 <list.take.empty> (take ?n ()) ()
-<list.take.rec> (take ?n (?h . ?t)) (cons ?h (take (- ?n 1) ?t))
+<list.take.one.single> (take 1 (?head)) (?head)
+<list.take.one.multi> (take 1 (?head . ?tail)) (?head)
+<list.take.multi> (take ?n (?h . ?t)) (cons ?h (take (- ?n 1) ?t))
+
 <list.drop.zero> (drop 0 ?list) ?list
 <list.drop.empty> (drop ?n ()) ()
-<list.drop.rec> (drop ?n (?h . ?t)) (drop (- ?n 1) ?t)
+<list.drop.one.single> (drop 1 (?head)) ()
+<list.drop.one.multi> (drop 1 (?head . ?tail)) ?tail
+<list.drop.multi> (drop ?n (?h . ?t)) (drop (- ?n 1) ?t)
+
+# Erweiterte cons-Regeln
+<list.cons.empty> (cons ?item ()) (?item)
+<list.cons.single> (cons ?item (?first)) (?item ?first)
+<list.cons.two> (cons ?item (?first ?second)) (?item ?first ?second)
+<list.cons.three> (cons ?item (?first ?second ?third)) (?item ?first ?second ?third)
+<list.cons.multi> (cons ?item (?first ?second ?third ?fourth . ?rest)) (?item ?first ?second ?third ?fourth . ?rest)
 
 # ==========================================
 # Boolesche Logik (bool)
@@ -97,198 +128,190 @@
 <cond.if.false> (if false ?then ?else) ?else
 
 # ==========================================
-# Physikalische Einheiten (physics)
+# UNIT-ARITHMETIK
 # ==========================================
 
-# Einheit erstellen: (unit wert einheit)
-<physics.unit> (unit ?value ?unit) (unit ?value ?unit)
+# Unit-zu-Unit Operationen ZUERST (spezifischer)
+<unit.mult.units> (* (unit ?a ?u1) (unit ?b ?u2)) (unit (: * ?a ?b) (unit-multiply ?u1 ?u2))
+<unit.div.units> (/ (unit ?a ?u1) (unit ?b ?u2)) (unit (: / ?a ?b) (unit-divide ?u1 ?u2))
+<unit.add.same> (+ (unit ?a ?u) (unit ?b ?u)) (unit (: + ?a ?b) ?u)
+<unit.sub.same> (- (unit ?a ?u) (unit ?b ?u)) (unit (: - ?a ?b) ?u)
 
-# Dimensionslose Zahlen als Einheit behandeln
-<physics.unitless> (unit ?value 1) ?value
+# Skalar-Unit Operationen DANACH (allgemeiner)
+<unit.mult.scalar.left> (* ?scalar (unit ?value ?unit)) (unit (: * ?scalar ?value) ?unit)
+<unit.mult.scalar.right> (* (unit ?value ?unit) ?scalar) (unit (: * ?value ?scalar) ?unit)
+<unit.div.scalar> (/ (unit ?value ?unit) ?scalar) (unit (: / ?value ?scalar) ?unit)
 
-# ==========================================
-# Längeneinheiten (length)
-# ==========================================
-
-# Meter als Basiseinheit
-<length.m.to.base> (to-base (unit ?v m)) (unit ?v m)
-<length.km.to.base> (to-base (unit ?v km)) (unit (* ?v 1000) m)
-<length.cm.to.base> (to-base (unit ?v cm)) (unit (/ ?v 100) m)
-<length.mm.to.base> (to-base (unit ?v mm)) (unit (/ ?v 1000) m)
-<length.inch.to.base> (to-base (unit ?v in)) (unit (* ?v 0.0254) m)
-<length.ft.to.base> (to-base (unit ?v ft)) (unit (* ?v 0.3048) m)
-<length.yard.to.base> (to-base (unit ?v yd)) (unit (* ?v 0.9144) m)
-<length.mile.to.base> (to-base (unit ?v mi)) (unit (* ?v 1609.344) m)
-
-# Addition von Längen (gleiche Einheiten)
-<length.add.same> (+ (unit ?a ?u) (unit ?b ?u)) (unit (+ ?a ?b) ?u)
-
-# Addition von Längen (verschiedene Einheiten)
-<length.add.diff> (+ (unit ?a ?u1) (unit ?b ?u2)) (+ (to-base (unit ?a ?u1)) (to-base (unit ?b ?u2)))
-
-# Subtraktion von Längen
-<length.sub.same> (- (unit ?a ?u) (unit ?b ?u)) (unit (- ?a ?b) ?u)
-<length.sub.diff> (- (unit ?a ?u1) (unit ?b ?u2)) (- (to-base (unit ?a ?u1)) (to-base (unit ?b ?u2)))
 
 # ==========================================
-# Masseeinheiten (mass)
+# EINHEITEN-ALGEBRA
 # ==========================================
 
-# Kilogramm als Basiseinheit
-<mass.kg.to.base> (to-base (unit ?v kg)) (unit ?v kg)
-<mass.g.to.base> (to-base (unit ?v g)) (unit (/ ?v 1000) kg)
-<mass.t.to.base> (to-base (unit ?v t)) (unit (* ?v 1000) kg)
-<mass.lb.to.base> (to-base (unit ?v lb)) (unit (* ?v 0.453592) kg)
-<mass.oz.to.base> (to-base (unit ?v oz)) (unit (* ?v 0.0283495) kg)
+# Einheiten-Multiplikation (spezielle Physik-Fälle)
+<unit.multiply.kg.ms2> (unit-multiply kg m/s²) N
+<unit.multiply.ms2.kg> (unit-multiply m/s² kg) N
+<unit.multiply.n.m> (unit-multiply N m) J
+<unit.multiply.m.n> (unit-multiply m N) J
+<unit.multiply.m.m> (unit-multiply m m) m²
+<unit.multiply.s.hz> (unit-multiply s Hz) 1
 
-# Operationen mit Massen
-<mass.add.same> (+ (unit ?a ?u) (unit ?b ?u)) (unit (+ ?a ?b) ?u)
-<mass.add.diff> (+ (unit ?a ?u1) (unit ?b ?u2)) (+ (to-base (unit ?a ?u1)) (to-base (unit ?b ?u2)))
-<mass.sub.same> (- (unit ?a ?u) (unit ?b ?u)) (unit (- ?a ?b) ?u)
-<mass.sub.diff> (- (unit ?a ?u1) (unit ?b ?u2)) (- (to-base (unit ?a ?u1)) (to-base (unit ?b ?u2)))
+# Einheiten-Division (spezielle Fälle)
+<unit.divide.m.s> (unit-divide m s) m/s
+<unit.divide.j.s> (unit-divide J s) W
+<unit.divide.same> (unit-divide ?u ?u) 1
+<unit.divide.m2.m> (unit-divide m² m) m
+<unit.divide.n.kg> (unit-divide N kg) m/s²
+
+# Allgemeine Einheiten-Kombination (als Fallback)
+<unit.multiply.general> (unit-multiply ?u1 ?u2) (?u1*?u2)
+<unit.divide.general> (unit-divide ?u1 ?u2) (?u1/?u2)
+
+
+<unit.resolve.divide.ms> (unit ?v (unit-divide m s)) (unit ?v m/s)
+<unit.resolve.divide.js> (unit ?v (unit-divide J s)) (unit ?v W)
+<unit.resolve.multiply.mm> (unit ?v (unit-multiply m m)) (unit ?v m²)
+<unit.resolve.multiply.kgms2> (unit ?v (unit-multiply kg m/s²)) (unit ?v N)
+<unit.resolve.multiply.nm> (unit ?v (unit-multiply N m)) (unit ?v J)
+
+
+<unit.resolve.multiply.general> (unit ?v (unit-multiply ?u1 ?u2)) (unit ?v (?u1*?u2))
+<unit.resolve.divide.general> (unit ?v (unit-divide ?u1 ?u2)) (unit ?v (?u1/?u2))
+
 
 # ==========================================
-# Zeiteinheiten (time)
+# SPEZIELLE PHYSIK-REGELN
 # ==========================================
 
-# Sekunden als Basiseinheit
-<time.s.to.base> (to-base (unit ?v s)) (unit ?v s)
-<time.min.to.base> (to-base (unit ?v min)) (unit (* ?v 60) s)
-<time.h.to.base> (to-base (unit ?v h)) (unit (* ?v 3600) s)
-<time.day.to.base> (to-base (unit ?v day)) (unit (* ?v 86400) s)
-<time.ms.to.base> (to-base (unit ?v ms)) (unit (/ ?v 1000) s)
-<time.us.to.base> (to-base (unit ?v us)) (unit (/ ?v 1000000) s)
+# Kraft = Masse * Beschleunigung (automatische Umwandlung zu Newton)
+<physics.force> (* (unit ?m kg) (unit ?a m/s²)) (unit (: * ?m ?a) N)
+<physics.force.rev> (* (unit ?a m/s²) (unit ?m kg)) (unit (: * ?a ?m) N)
 
-# Operationen mit Zeit
-<time.add.same> (+ (unit ?a ?u) (unit ?b ?u)) (unit (+ ?a ?b) ?u)
-<time.add.diff> (+ (unit ?a ?u1) (unit ?b ?u2)) (+ (to-base (unit ?a ?u1)) (to-base (unit ?b ?u2)))
-<time.sub.same> (- (unit ?a ?u) (unit ?b ?u)) (unit (- ?a ?b) ?u)
-<time.sub.diff> (- (unit ?a ?u1) (unit ?b ?u2)) (- (to-base (unit ?a ?u1)) (to-base (unit ?b ?u2)))
+# Energie = Kraft * Weg (automatische Umwandlung zu Joule)
+<physics.energy> (* (unit ?f N) (unit ?d m)) (unit (: * ?f ?d) J)
+<physics.energy.rev> (* (unit ?d m) (unit ?f N)) (unit (: * ?d ?f) J)
 
-# ==========================================
-# Geschwindigkeitseinheiten (velocity)
-# ==========================================
-
-# Meter pro Sekunde als Basiseinheit
-<velocity.ms.to.base> (to-base (unit ?v m/s)) (unit ?v m/s)
-<velocity.kmh.to.base> (to-base (unit ?v km/h)) (unit (/ ?v 3.6) m/s)
-<velocity.mph.to.base> (to-base (unit ?v mph)) (unit (* ?v 0.44704) m/s)
-<velocity.fts.to.base> (to-base (unit ?v ft/s)) (unit (* ?v 0.3048) m/s)
+# Leistung = Energie / Zeit (automatische Umwandlung zu Watt)
+<physics.power> (/ (unit ?e J) (unit ?t s)) (unit (: / ?e ?t) W)
 
 # Geschwindigkeit = Strecke / Zeit
-<velocity.calc> (/ (unit ?d ?du) (unit ?t ?tu)) (unit (/ ?d ?t) (/ ?du ?tu))
+<physics.velocity> (/ (unit ?d m) (unit ?t s)) (unit (: / ?d ?t) m/s)
 
-# Operationen mit Geschwindigkeiten
-<velocity.add.same> (+ (unit ?a ?u) (unit ?b ?u)) (unit (+ ?a ?b) ?u)
-<velocity.sub.same> (- (unit ?a ?u) (unit ?b ?u)) (unit (- ?a ?b) ?u)
+# Beschleunigung = Geschwindigkeit / Zeit
+<physics.acceleration> (/ (unit ?v m/s) (unit ?t s)) (unit (: / ?v ?t) m/s²)
 
 # ==========================================
-# Krafteinheiten (force)
+# EINHEITEN-KONVERTIERUNG (bestehend)
 # ==========================================
 
-# Newton als Basiseinheit (kg*m/s²)
+# Physikalische Einheiten
+<physics.unit> (unit ?value ?unit) (unit ?value ?unit)
+<physics.unitless> (unit ?value 1) ?value
+
+# Längeneinheiten - Basis-Konversionen
+<length.m.to.base> (to-base (unit ?v m)) (unit ?v m)
+<length.km.to.base> (to-base (unit ?v km)) (unit (: * ?v 1000) m)
+<length.cm.to.base> (to-base (unit ?v cm)) (unit (: / ?v 100) m)
+<length.mm.to.base> (to-base (unit ?v mm)) (unit (: / ?v 1000) m)
+<length.inch.to.base> (to-base (unit ?v in)) (unit (: * ?v 0.0254) m)
+<length.ft.to.base> (to-base (unit ?v ft)) (unit (: * ?v 0.3048) m)
+<length.yard.to.base> (to-base (unit ?v yd)) (unit (: * ?v 0.9144) m)
+<length.mile.to.base> (to-base (unit ?v mi)) (unit (: * ?v 1609.344) m)
+
+# Masseeinheiten
+<mass.kg.to.base> (to-base (unit ?v kg)) (unit ?v kg)
+<mass.g.to.base> (to-base (unit ?v g)) (unit (: / ?v 1000) kg)
+<mass.t.to.base> (to-base (unit ?v t)) (unit (: * ?v 1000) kg)
+<mass.lb.to.base> (to-base (unit ?v lb)) (unit (: * ?v 0.453592) kg)
+<mass.oz.to.base> (to-base (unit ?v oz)) (unit (: * ?v 0.0283495) kg)
+
+# Zeiteinheiten
+<time.s.to.base> (to-base (unit ?v s)) (unit ?v s)
+<time.min.to.base> (to-base (unit ?v min)) (unit (: * ?v 60) s)
+<time.h.to.base> (to-base (unit ?v h)) (unit (: * ?v 3600) s)
+<time.day.to.base> (to-base (unit ?v day)) (unit (: * ?v 86400) s)
+<time.ms.to.base> (to-base (unit ?v ms)) (unit (: / ?v 1000) s)
+<time.us.to.base> (to-base (unit ?v us)) (unit (: / ?v 1000000) s)
+
+# Geschwindigkeitseinheiten
+<velocity.ms.to.base> (to-base (unit ?v m/s)) (unit ?v m/s)
+<velocity.kmh.to.base> (to-base (unit ?v km/h)) (unit (: / ?v 3.6) m/s)
+<velocity.mph.to.base> (to-base (unit ?v mph)) (unit (: * ?v 0.44704) m/s)
+<velocity.fts.to.base> (to-base (unit ?v ft/s)) (unit (: * ?v 0.3048) m/s)
+
+# Krafteinheiten
 <force.n.to.base> (to-base (unit ?v N)) (unit ?v N)
-<force.kn.to.base> (to-base (unit ?v kN)) (unit (* ?v 1000) N)
-<force.lbf.to.base> (to-base (unit ?v lbf)) (unit (* ?v 4.448222) N)
+<force.kn.to.base> (to-base (unit ?v kN)) (unit (: * ?v 1000) N)
+<force.lbf.to.base> (to-base (unit ?v lbf)) (unit (: * ?v 4.448222) N)
 
-# Kraft = Masse * Beschleunigung
-<force.calc> (* (unit ?m kg) (unit ?a m/s²)) (unit (* ?m ?a) N)
-
-# ==========================================
-# Energieeinheiten (energy)
-# ==========================================
-
-# Joule als Basiseinheit
+# Energieeinheiten
 <energy.j.to.base> (to-base (unit ?v J)) (unit ?v J)
-<energy.kj.to.base> (to-base (unit ?v kJ)) (unit (* ?v 1000) J)
-<energy.mj.to.base> (to-base (unit ?v MJ)) (unit (* ?v 1000000) J)
-<energy.wh.to.base> (to-base (unit ?v Wh)) (unit (* ?v 3600) J)
-<energy.kwh.to.base> (to-base (unit ?v kWh)) (unit (* ?v 3600000) J)
-<energy.cal.to.base> (to-base (unit ?v cal)) (unit (* ?v 4.184) J)
-<energy.kcal.to.base> (to-base (unit ?v kcal)) (unit (* ?v 4184) J)
+<energy.kj.to.base> (to-base (unit ?v kJ)) (unit (: * ?v 1000) J)
+<energy.mj.to.base> (to-base (unit ?v MJ)) (unit (: * ?v 1000000) J)
+<energy.wh.to.base> (to-base (unit ?v Wh)) (unit (: * ?v 3600) J)
+<energy.kwh.to.base> (to-base (unit ?v kWh)) (unit (: * ?v 3600000) J)
+<energy.cal.to.base> (to-base (unit ?v cal)) (unit (: * ?v 4.184) J)
+<energy.kcal.to.base> (to-base (unit ?v kcal)) (unit (: * ?v 4184) J)
 
-# Energie = Arbeit = Kraft * Weg
-<energy.calc> (* (unit ?f N) (unit ?d m)) (unit (* ?f ?d) J)
-
-# ==========================================
-# Leistungseinheiten (power)
-# ==========================================
-
-# Watt als Basiseinheit
+# Leistungseinheiten
 <power.w.to.base> (to-base (unit ?v W)) (unit ?v W)
-<power.kw.to.base> (to-base (unit ?v kW)) (unit (* ?v 1000) W)
-<power.mw.to.base> (to-base (unit ?v MW)) (unit (* ?v 1000000) W)
-<power.hp.to.base> (to-base (unit ?v hp)) (unit (* ?v 745.7) W)
+<power.kw.to.base> (to-base (unit ?v kW)) (unit (: * ?v 1000) W)
+<power.mw.to.base> (to-base (unit ?v MW)) (unit (: * ?v 1000000) W)
+<power.hp.to.base> (to-base (unit ?v hp)) (unit (: * ?v 745.7) W)
 
-# Leistung = Energie / Zeit
-<power.calc> (/ (unit ?e J) (unit ?t s)) (unit (/ ?e ?t) W)
-
-# ==========================================
-# Temperatureinheiten (temperature)
-# ==========================================
-
-# Celsius als Arbeitseinheit (Kelvin intern)
-<temp.c.to.base> (to-base (unit ?v °C)) (unit (+ ?v 273.15) K)
+# Temperatureinheiten
+<temp.c.to.base> (to-base (unit ?v °C)) (unit (: + ?v 273.15) K)
 <temp.k.to.base> (to-base (unit ?v K)) (unit ?v K)
-<temp.f.to.base> (to-base (unit ?v °F)) (unit (+ (* (/ (- ?v 32) 9) 5) 273.15) K)
+<temp.f.to.base> (to-base (unit ?v °F)) (unit (: + (: * (: / (: - ?v 32) 9) 5) 273.15) K)
 
 # Temperaturdifferenzen
-<temp.diff.c> (- (unit ?a °C) (unit ?b °C)) (unit (- ?a ?b) °C)
-<temp.diff.k> (- (unit ?a K) (unit ?b K)) (unit (- ?a ?b) K)
+<temp.diff.c> (- (unit ?a °C) (unit ?b °C)) (unit (: - ?a ?b) °C)
+<temp.diff.k> (- (unit ?a K) (unit ?b K)) (unit (: - ?a ?b) K)
 
 # ==========================================
-# Einheiten-Multiplikation und -Division
-# ==========================================
-
-# Skalar * Einheit
-<unit.scalar.mult> (* ?scalar (unit ?value ?unit)) (unit (* ?scalar ?value) ?unit)
-<unit.mult.scalar> (* (unit ?value ?unit) ?scalar) (unit (* ?value ?scalar) ?unit)
-
-# Skalar / Einheit
-<unit.scalar.div> (/ ?scalar (unit ?value ?unit)) (unit (/ ?scalar ?value) (/ 1 ?unit))
-<unit.div.scalar> (/ (unit ?value ?unit) ?scalar) (unit (/ ?value ?scalar) ?unit)
-
-# Einheit * Einheit (Dimensionen multiplizieren)
-<unit.mult.units> (* (unit ?a ?u1) (unit ?b ?u2)) (unit (* ?a ?b) (* ?u1 ?u2))
-
-# Einheit / Einheit (Dimensionen dividieren)
-<unit.div.units> (/ (unit ?a ?u1) (unit ?b ?u2)) (unit (/ ?a ?b) (/ ?u1 ?u2))
-
-# ==========================================
-# Einheiten-Konvertierung
+# ERWEITERTE KONVERSIONEN
 # ==========================================
 
 # Konvertiere in spezifische Einheit
 <unit.convert> (convert (unit ?v ?from) ?to) (from-base (to-base (unit ?v ?from)) ?to)
 
+# Direkte Konversionen (neue)
+<unit.convert.s.min> (convert (unit ?v s) min) (unit (/ ?v 60) min)
+<unit.convert.min.s> (convert (unit ?v min) s) (unit (: * ?v 60) s)
+<unit.convert.min.h> (convert (unit ?v min) h) (unit (: / ?v 60) h)
+<unit.convert.h.min> (convert (unit ?v h) min) (unit (: * ?v 60) min)
+<unit.convert.m.km> (convert (unit ?v m) km) (unit (/ ?v 1000) km)
+<unit.convert.km.m> (convert (unit ?v km) m) (unit (: * ?v 1000) m)
+<unit.convert.cm.m> (convert (unit ?v cm) m) (unit (: / ?v 100) m)
+<unit.convert.m.cm> (convert (unit ?v m) cm) (unit (: * ?v 100) cm)
+
 # Von Basiseinheiten zurück konvertieren
 <unit.from.base.m> (from-base (unit ?v m) m) (unit ?v m)
-<unit.from.base.km> (from-base (unit ?v m) km) (unit (/ ?v 1000) km)
-<unit.from.base.cm> (from-base (unit ?v m) cm) (unit (* ?v 100) cm)
-<unit.from.base.mm> (from-base (unit ?v m) mm) (unit (* ?v 1000) mm)
-<unit.from.base.in> (from-base (unit ?v m) in) (unit (/ ?v 0.0254) in)
-<unit.from.base.ft> (from-base (unit ?v m) ft) (unit (/ ?v 0.3048) ft)
+<unit.from.base.km> (from-base (unit ?v m) km) (unit (: / ?v 1000) km)
+<unit.from.base.cm> (from-base (unit ?v m) cm) (unit (: * ?v 100) cm)
+<unit.from.base.mm> (from-base (unit ?v m) mm) (unit (: * ?v 1000) mm)
+<unit.from.base.in> (from-base (unit ?v m) in) (unit (: / ?v 0.0254) in)
+<unit.from.base.ft> (from-base (unit ?v m) ft) (unit (: / ?v 0.3048) ft)
 
-# Masse zurück konvertieren
 <unit.from.base.kg> (from-base (unit ?v kg) kg) (unit ?v kg)
-<unit.from.base.g> (from-base (unit ?v kg) g) (unit (* ?v 1000) g)
-<unit.from.base.t> (from-base (unit ?v kg) t) (unit (/ ?v 1000) t)
+<unit.from.base.g> (from-base (unit ?v kg) g) (unit (: * ?v 1000) g)
+<unit.from.base.t> (from-base (unit ?v kg) t) (unit (: / ?v 1000) t)
 
-# Zeit zurück konvertieren
 <unit.from.base.s> (from-base (unit ?v s) s) (unit ?v s)
-<unit.from.base.min> (from-base (unit ?v s) min) (unit (/ ?v 60) min)
-<unit.from.base.h> (from-base (unit ?v s) h) (unit (/ ?v 3600) h)
+<unit.from.base.min> (from-base (unit ?v s) min) (unit (: / ?v 60) min)
+<unit.from.base.h> (from-base (unit ?v s) h) (unit (: / ?v 3600) h)
 
 # ==========================================
-# Hilfs-Funktionen für Einheiten
+# HILFS-FUNKTIONEN FÜR EINHEITEN
 # ==========================================
 
-# Wert einer Einheit extrahieren
 <unit.value> (value (unit ?v ?u)) ?v
-
-# Einheit extrahieren
 <unit.unit> (unit-of (unit ?v ?u)) ?u
-
-# Prüfe ob zwei Einheiten kompatibel sind
 <unit.compatible.same> (compatible? (unit ?a ?u) (unit ?b ?u)) true
 <unit.compatible.diff> (compatible? (unit ?a ?u1) (unit ?b ?u2)) (compatible-units? ?u1 ?u2)
+
+# Grundrechenarten
+<math.+> (+ ?a ?b) (: + ?a ?b)
+<math.*> (* ?a ?b) (: * ?a ?b)
+<math.-> (- ?a ?b) (: - ?a ?b)
+<math./> (/ ?a ?b) (: / ?a ?b)
+<math.%> (% ?a ?b) (: % ?a ?b)

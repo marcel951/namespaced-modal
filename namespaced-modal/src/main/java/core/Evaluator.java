@@ -8,6 +8,22 @@ public class Evaluator {
             if (head instanceof Term.Atom atom && ":".equals(atom.value())) {
                 return evaluateArithmetic(list);
             }
+
+            // NEUE LOGIK: Evaluiere auch Sub-Terme in Listen
+            java.util.List<Term> evaluatedElements = new java.util.ArrayList<>();
+            boolean changed = false;
+
+            for (Term element : list.elements()) {
+                Term evaluatedElement = evaluate(element);
+                evaluatedElements.add(evaluatedElement);
+                if (!evaluatedElement.equals(element)) {
+                    changed = true;
+                }
+            }
+
+            if (changed) {
+                return new Term.List(evaluatedElements);
+            }
         }
         return term;
     }
@@ -25,36 +41,45 @@ public class Evaluator {
             throw new IllegalArgumentException("Operator must be an atom");
         }
 
-        // Recursively evaluate arguments first
         Term evaluatedArg1 = evaluate(arg1);
         Term evaluatedArg2 = evaluate(arg2);
 
         return evaluateBinaryOp(opAtom.value(), evaluatedArg1, evaluatedArg2);
     }
 
+    // ... rest bleibt gleich (evaluateBinaryOp Methode unverändert)
     private static Term evaluateBinaryOp(String op, Term arg1, Term arg2) {
         if (!(arg1 instanceof Term.Atom a1) || !(arg2 instanceof Term.Atom a2)) {
-            throw new IllegalArgumentException("Arithmetic arguments must be atoms");
+            throw new IllegalArgumentException("Arithmetic arguments must be atoms: " + arg1 + ", " + arg2);
         }
 
         if (!a1.isNumber() || !a2.isNumber()) {
-            throw new IllegalArgumentException("Arithmetic arguments must be numbers");
+            throw new IllegalArgumentException("Arithmetic arguments must be numbers: " + arg1 + ", " + arg2);
         }
 
-        int val1 = a1.asNumber();
-        int val2 = a2.asNumber();
+        double val1 = a1.asDouble();
+        double val2 = a2.asDouble();
 
-        int result = switch (op) {
+        double result = switch (op) {
             case "+" -> val1 + val2;
             case "-" -> val1 - val2;
             case "*" -> val1 * val2;
             case "/" -> {
-                if (val2 == 0) throw new ArithmeticException("Division by zero");
+                if (val2 == 0.0) throw new ArithmeticException("Division by zero");
                 yield val1 / val2;
             }
             case "%" -> val1 % val2;
+            case ">" -> (val1 > val2) ? 1.0 : 0.0;
+            case "<" -> (val1 < val2) ? 1.0 : 0.0;
+            case "==" -> (val1 == val2) ? 1.0 : 0.0;
+            case ">=" -> (val1 >= val2) ? 1.0 : 0.0;
+            case "<=" -> (val1 <= val2) ? 1.0 : 0.0;
             default -> throw new IllegalArgumentException("Unknown operator: " + op);
         };
+
+        if (op.equals(">") || op.equals("<") || op.equals("==") || op.equals(">=") || op.equals("<=")) {
+            return Term.bool(result != 0.0);
+        }
 
         return Term.number(result);
     }

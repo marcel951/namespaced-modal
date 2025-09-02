@@ -7,6 +7,15 @@ public sealed interface Term permits Term.Atom, Term.List {
     record Atom(String value) implements Term {
         public boolean isNumber() {
             try {
+                Double.parseDouble(value);
+                return true;
+            } catch (NumberFormatException e) {
+                return false;
+            }
+        }
+
+        public boolean isInteger() {
+            try {
                 Integer.parseInt(value);
                 return true;
             } catch (NumberFormatException e) {
@@ -24,6 +33,10 @@ public sealed interface Term permits Term.Atom, Term.List {
 
         public int asNumber() {
             return Integer.parseInt(value);
+        }
+
+        public double asDouble() {
+            return Double.parseDouble(value);
         }
 
         public boolean asBoolean() {
@@ -70,7 +83,20 @@ public sealed interface Term permits Term.Atom, Term.List {
 
         @Override
         public String toString() {
+            // Prüfe ob es eine gepunktete Liste (Cons-Cell) ist
+            if (elements.size() == 2 && isDottedList()) {
+                return "(" + elements.get(0) + " . " + elements.get(1) + ")";
+            }
+            
+            // Normale Listenformatierung
             return "(" + String.join(" ", elements.stream().map(Term::toString).toArray(String[]::new)) + ")";
+        }
+
+        private boolean isDottedList() {
+
+            return elements.size() == 2 && 
+                   elements.get(1) instanceof Term.List list && 
+                   !list.isEmpty();
         }
     }
 
@@ -86,7 +112,16 @@ public sealed interface Term permits Term.Atom, Term.List {
         return new Atom(String.valueOf(value));
     }
 
+    static Term number(double value) {
+        if (value == (int) value) {
+            return new Atom(String.valueOf((int) value));
+        } else {
+            return new Atom(String.format("%.6g", value));
+        }
+    }
+
     static Term bool(boolean value) {
         return new Atom(String.valueOf(value));
     }
+    
 }

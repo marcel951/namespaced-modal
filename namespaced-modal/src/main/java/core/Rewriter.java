@@ -1,3 +1,4 @@
+
 package core;
 
 import debug.Debugger;
@@ -7,7 +8,10 @@ import java.util.*;
 public class Rewriter {
     private final RuleSet ruleSet;
     private final Debugger debugger;
-    private final Set<Term> seenTerms = new HashSet<>();
+    private final Set<Term> seenTerms = Collections.newSetFromMap(new IdentityHashMap<>());
+
+    private static final int MAX_STEPS = 10000;
+    private int stepCount = 0;
 
     public Rewriter(RuleSet ruleSet, Debugger debugger) {
         this.ruleSet = ruleSet;
@@ -16,6 +20,7 @@ public class Rewriter {
 
     public Term rewrite(Term term) {
         seenTerms.clear();
+        stepCount = 0;
         if (debugger.getMode() == Debugger.Mode.DEBUG) {
             System.out.println("DEBUG: Starting rewrite of: " + term);
         }
@@ -23,6 +28,10 @@ public class Rewriter {
     }
 
     private Term rewriteInternal(Term term) {
+        if (++stepCount > MAX_STEPS) {
+            throw new IllegalStateException("Rewrite step limit exceeded (mögliche Nichtterminierung durch Regeln).");
+        }
+
         if (seenTerms.contains(term)) {
             throw new IllegalStateException("Cycle detected in rewriting: " + term);
         }
@@ -30,14 +39,12 @@ public class Rewriter {
 
         debugger.onStepStart(term);
 
-        // Try rewriting FIRST (before evaluation)
         Term rewritten = rewriteOnce(term);
         if (!rewritten.equals(term)) {
             seenTerms.remove(term);
             return rewriteInternal(rewritten);
         }
 
-        // Try evaluation if no rewriting was possible
         Term evaluated = Evaluator.evaluate(term);
         if (!evaluated.equals(term)) {
             debugger.onEvaluation(term, evaluated);
@@ -45,10 +52,18 @@ public class Rewriter {
             return rewriteInternal(evaluated);
         }
 
-        // No more rewrites possible
         debugger.onStepEnd(term);
         seenTerms.remove(term);
         return term;
+    }
+
+    private static boolean isNegativeNumber(Term t) {
+        if (t instanceof Term.Atom a && a.isNumber()) {
+            try {
+                return a.asDouble() < 0;
+            } catch (NumberFormatException ignored) { /* nicht numerisch */ }
+        }
+        return false;
     }
 
     private Term rewriteOnce(Term term) {
@@ -58,6 +73,41 @@ public class Rewriter {
 
         if (term instanceof Term.List list && !list.isEmpty()) {
             String functionSymbol = list.getFunctionSymbol();
+
+            // DOMAIN GUARDS: Verhindere nicht-terminierende Umschreibungen
+            if ("pow".equals(functionSymbol)) {
+                if (list.elements().size() >= 3) {
+                    Term exp = list.elements().get(2);
+                    if (isNegativeNumber(exp)) {
+                        throw new IllegalArgumentException("pow mit negativem Exponenten wird nicht unterstützt: " + term);
+                    }
+                }
+            }
+            if ("fact".equals(functionSymbol)) {
+                if (list.elements().size() >= 2) {
+                    Term n = list.elements().get(1);
+                    if (isNegativeNumber(n)) {
+                        throw new IllegalArgumentException("factorial ist für negative Eingaben nicht definiert: " + term);
+                    }
+                }
+            }
+            if ("fib".equals(functionSymbol)) {
+                if (list.elements().size() >= 2) {
+                    Term n = list.elements().get(1);
+                    if (isNegativeNumber(n)) {
+                        throw new IllegalArgumentException("fibonacci ist für negative Eingaben nicht definiert: " + term);
+                    }
+                }
+            }
+            if ("take".equals(functionSymbol) || "drop".equals(functionSymbol)) {
+                if (list.elements().size() >= 2) {
+                    Term n = list.elements().get(1);
+                    if (isNegativeNumber(n)) {
+                        throw new IllegalArgumentException(functionSymbol + " mit negativem n ist nicht definiert: " + term);
+                    }
+                }
+            }
+
             if (debugger.getMode() == Debugger.Mode.DEBUG) {
                 System.out.println("DEBUG: Function symbol: '" + functionSymbol + "'");
             }
@@ -74,7 +124,6 @@ public class Rewriter {
                     System.out.println("DEBUG: Term: " + term);
                 }
 
-                // Use debug matching only in debug mode
                 Optional<Map<String, Term>> match =
                         debugger.getMode() == Debugger.Mode.DEBUG ?
                                 RuleMatcher.matchDebug(rule.pattern(), term) :
@@ -99,7 +148,6 @@ public class Rewriter {
                 }
             }
 
-            // Try rewriting subterms
             java.util.List<Term> newElements = new ArrayList<>();
             boolean changed = false;
 
