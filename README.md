@@ -17,7 +17,7 @@ Key features:
 
 ### Prerequisites
 - Java 21 or higher
-- Gradle 7.0 or higher
+- Gradle 8.7 or higher
 
 ### Building from Source
 1. Clone the repository:
