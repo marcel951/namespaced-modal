@@ -39,7 +39,6 @@ public class DynamicRuleParser {
     public static ParseResult parse(String input) {
         input = input.trim();
 
-        // Try parsing add rule syntax
         Matcher addMatcher = ADD_RULE_PATTERN.matcher(input);
         if (addMatcher.matches()) {
             return parseAddRule(addMatcher);
@@ -132,7 +131,6 @@ public class DynamicRuleParser {
 
             return new String[]{pattern, replacement};
         } else {
-            // Pattern is a single atom - find the first space
             int spaceIndex = rest.indexOf(' ');
             if (spaceIndex == -1) {
                 throw new IllegalArgumentException("Ersetzung fehlt");

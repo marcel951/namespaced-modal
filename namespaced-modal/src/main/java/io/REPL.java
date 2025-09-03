@@ -1,9 +1,7 @@
 
 package io;
 
-import core.RuleSet;
-import core.Term;
-import core.Rewriter;
+import core.*;
 import debug.Debugger;
 
 import java.io.BufferedReader;
@@ -14,12 +12,15 @@ public class REPL {
     private final RuleSet ruleSet;
     private final BufferedReader reader;
     private Debugger debugger;
+    private final UnifiedInterpreter interpreter; // ← HINZUFÜGEN: Member Variable
 
     public REPL(RuleSet ruleSet) {
         this.ruleSet = ruleSet;
         this.reader = new BufferedReader(new InputStreamReader(System.in));
         this.debugger = new Debugger(Debugger.Mode.QUIET);
+        this.interpreter = new UnifiedInterpreter(ruleSet, debugger); // ← HINZUFÜGEN: Initialisierung
     }
+
 
     public void run() throws IOException {
         System.out.println("Namespaced-Modal Term-Rewriting Language");
@@ -152,14 +153,24 @@ public class REPL {
     }
 
     private void evaluateExpression(String expression) {
+        try {
+            Term term = TermParser.parse(expression);
+
+            if (debugger.getMode() == Debugger.Mode.DEBUG) {
+                System.out.println("DEBUG: Parsed: " + term);
+            }
+        } catch (Exception e) {
+            System.err.println("Parse error: " + e.getMessage());
+            return;
+        }
+
         Term term = TermParser.parse(expression);
 
         if (debugger.getMode() == Debugger.Mode.DEBUG) {
-            System.out.println("DEBUG: Parsed term: " + term);
+            System.out.println("DEBUG: Evaluating: " + term);
         }
 
-        Rewriter rewriter = new Rewriter(ruleSet, debugger);
-        Term result = rewriter.rewrite(term);
+        Term result = interpreter.evaluate(term);
 
         if (debugger.getMode() == Debugger.Mode.DEBUG) {
             System.out.println("DEBUG: Result: " + result);

@@ -1,243 +1,70 @@
 # ==========================================
-# Mathematische Operationen (math)
+# Mathematische Operationen - RICHTIGE REIHENFOLGE!
 # ==========================================
 
-# Grundrechenarten - delegieren an eingebaute Operationen
+# Grundrechenarten
 <math.+> (+ ?a ?b) (: + ?a ?b)
 <math.*> (* ?a ?b) (: * ?a ?b)
 <math.-> (- ?a ?b) (: - ?a ?b)
 <math./> (/ ?a ?b) (: / ?a ?b)
 <math.%> (% ?a ?b) (: % ?a ?b)
 
-# Potenzieren (einfache Fälle)
-<math.pow.0> (pow ?a 0) 1
-<math.pow.1> (pow ?a 1) ?a
-<math.pow.2> (pow ?a 2) (* ?a ?a)
-<math.pow.3> (pow ?a 3) (* ?a (* ?a ?a))
-
-# Fakultätsfunktion (nur für kleine Zahlen)
+# WICHTIG: Base Cases ZUERST, dann generische Regel!
+# Fakultät - Base Cases haben Priorität
 <math.fact.0> (fact 0) 1
 <math.fact.1> (fact 1) 1
-<math.fact.2> (fact 2) 2
-<math.fact.3> (fact 3) 6
-<math.fact.4> (fact 4) 24
-<math.fact.5> (fact 5) 120
+<math.fact.n> (fact ?n) (if (= ?n 0) 1 (* ?n (fact (- ?n 1))))
+
+# Fibonacci - Base Cases haben Priorität
+<math.fib.0> (fib 0) 0
+<math.fib.1> (fib 1) 1
+<math.fib.n> (fib ?n) (if (<= ?n 1) ?n (+ (fib (- ?n 1)) (fib (- ?n 2))))
 
 # ==========================================
-# Listenoperationen (list)
+# Listen-Operationen
 # ==========================================
 
-# Grundlegende Operationen - VOLLSTÄNDIG für alle Listenlängen
-<list.first.single> (first (?head)) ?head
-<list.first.two> (first (?head ?second)) ?head
-<list.first.three> (first (?head ?second ?third)) ?head
-<list.first.four> (first (?head ?second ?third ?fourth)) ?head
-<list.first.five> (first (?head ?second ?third ?fourth ?fifth)) ?head
-<list.first.six> (first (?head ?second ?third ?fourth ?fifth ?sixth)) ?head
-<list.first.multi> (first (?head . ?tail)) ?head
+# car/cdr (head/tail) - Base Cases zuerst
+<list.car.empty> (car ()) (car ())
+<list.cdr.empty> (cdr ()) (cdr ())
+<list.car> (car (?head . ?tail)) ?head
+<list.cdr> (cdr (?head . ?tail)) ?tail
 
-<list.rest.single> (rest (?head)) ()
-<list.rest.two> (rest (?head ?second)) (?second)
-<list.rest.three> (rest (?head ?second ?third)) (?second ?third)
-<list.rest.four> (rest (?head ?second ?third ?fourth)) (?second ?third ?fourth)
-<list.rest.five> (rest (?head ?second ?third ?fourth ?fifth)) (?second ?third ?fourth ?fifth)
-<list.rest.six> (rest (?head ?second ?third ?fourth ?fifth ?sixth)) (?second ?third ?fourth ?fifth ?sixth)
-<list.rest.multi> (rest (?head . ?tail)) ?tail
-
-# Empty-Check
-<list.empty.true> (empty? ()) true
-<list.empty.false.single> (empty? (?head)) false
-<list.empty.false.multi> (empty? (?head . ?tail)) false
-
-# Länge einer Liste - VOLLSTÄNDIG
+# length - Rekursive Implementation
 <list.length.empty> (length ()) 0
-<list.length.single> (length (?head)) 1
-<list.length.two> (length (?head ?second)) 2
-<list.length.three> (length (?head ?second ?third)) 3
-<list.length.four> (length (?head ?second ?third ?fourth)) 4
-<list.length.five> (length (?head ?second ?third ?fourth ?fifth)) 5
-<list.length.six> (length (?head ?second ?third ?fourth ?fifth ?sixth)) 6
-<list.length.multi> (length (?head . ?tail)) (+ 1 (length ?tail))
+<list.length> (length (?head . ?tail)) (+ 1 (length ?tail))
 
-# Cons-Operation - VOLLSTÄNDIG
-<list.cons.empty> (cons ?item ()) (?item)
-<list.cons.single> (cons ?item (?first)) (?item ?first)
-<list.cons.two> (cons ?item (?first ?second)) (?item ?first ?second)
-<list.cons.three> (cons ?item (?first ?second ?third)) (?item ?first ?second ?third)
-<list.cons.four> (cons ?item (?first ?second ?third ?fourth)) (?item ?first ?second ?third ?fourth)
-<list.cons.five> (cons ?item (?first ?second ?third ?fourth ?fifth)) (?item ?first ?second ?third ?fourth ?fifth)
-<list.cons.multi> (cons ?item (?first . ?rest)) (?item ?first . ?rest)
+# null? - Empty List Check
+<list.null.empty> (null? ()) true
+<list.null> (null? (?head . ?tail)) false
 
-# Umkehren einer Liste - VOLLSTÄNDIG
-<list.reverse.empty> (reverse ()) ()
-<list.reverse.single> (reverse (?head)) (?head)
-<list.reverse.two> (reverse (?first ?second)) (?second ?first)
-<list.reverse.three> (reverse (?first ?second ?third)) (?third ?second ?first)
-<list.reverse.four> (reverse (?first ?second ?third ?fourth)) (?fourth ?third ?second ?first)
-<list.reverse.five> (reverse (?a ?b ?c ?d ?e)) (?e ?d ?c ?b ?a)
-<list.reverse.six> (reverse (?a ?b ?c ?d ?e ?f)) (?f ?e ?d ?c ?b ?a)
-<list.reverse.multi> (reverse (?head . ?tail)) (append (reverse ?tail) (?head))
+# cons - List Construction
+<list.cons> (cons ?elem ?list) (?elem . ?list)
 
-# Anhängen von Listen - VOLLSTÄNDIG
+# append - List Concatenation
 <list.append.empty.left> (append () ?list) ?list
-<list.append.empty.right> (append ?list ()) ?list
+<list.append> (append (?head . ?tail) ?list) (cons ?head (append ?tail ?list))
 
-# Single + verschiedene Längen
-<list.append.single.empty> (append (?head) ()) (?head)
-<list.append.single.single> (append (?head) (?item)) (?head ?item)
-<list.append.single.two> (append (?head) (?first ?second)) (?head ?first ?second)
-<list.append.single.three> (append (?head) (?first ?second ?third)) (?head ?first ?second ?third)
-<list.append.single.four> (append (?head) (?first ?second ?third ?fourth)) (?head ?first ?second ?third ?fourth)
-<list.append.single.five> (append (?head) (?first ?second ?third ?fourth ?fifth)) (?head ?first ?second ?third ?fourth ?fifth)
-<list.append.single.multi> (append (?head) (?first . ?rest)) (?head ?first . ?rest)
-
-# Two + verschiedene Längen
-<list.append.two.empty> (append (?h1 ?h2) ()) (?h1 ?h2)
-<list.append.two.single> (append (?h1 ?h2) (?item)) (?h1 ?h2 ?item)
-<list.append.two.two> (append (?h1 ?h2) (?i1 ?i2)) (?h1 ?h2 ?i1 ?i2)
-<list.append.two.three> (append (?h1 ?h2) (?i1 ?i2 ?i3)) (?h1 ?h2 ?i1 ?i2 ?i3)
-<list.append.two.four> (append (?h1 ?h2) (?i1 ?i2 ?i3 ?i4)) (?h1 ?h2 ?i1 ?i2 ?i3 ?i4)
-<list.append.two.five> (append (?h1 ?h2) (?i1 ?i2 ?i3 ?i4 ?i5)) (?h1 ?h2 ?i1 ?i2 ?i3 ?i4 ?i5)
-<list.append.two.multi> (append (?h1 ?h2) (?first . ?rest)) (?h1 ?h2 ?first . ?rest)
-
-# Three + verschiedene Längen
-<list.append.three.empty> (append (?h1 ?h2 ?h3) ()) (?h1 ?h2 ?h3)
-<list.append.three.single> (append (?h1 ?h2 ?h3) (?item)) (?h1 ?h2 ?h3 ?item)
-<list.append.three.two> (append (?h1 ?h2 ?h3) (?i1 ?i2)) (?h1 ?h2 ?h3 ?i1 ?i2)
-<list.append.three.three> (append (?h1 ?h2 ?h3) (?i1 ?i2 ?i3)) (?h1 ?h2 ?h3 ?i1 ?i2 ?i3)
-<list.append.three.multi> (append (?h1 ?h2 ?h3) (?first . ?rest)) (?h1 ?h2 ?h3 ?first . ?rest)
-
-# Four + verschiedene Längen
-<list.append.four.empty> (append (?h1 ?h2 ?h3 ?h4) ()) (?h1 ?h2 ?h3 ?h4)
-<list.append.four.single> (append (?h1 ?h2 ?h3 ?h4) (?item)) (?h1 ?h2 ?h3 ?h4 ?item)
-<list.append.four.two> (append (?h1 ?h2 ?h3 ?h4) (?i1 ?i2)) (?h1 ?h2 ?h3 ?h4 ?i1 ?i2)
-<list.append.four.multi> (append (?h1 ?h2 ?h3 ?h4) (?first . ?rest)) (?h1 ?h2 ?h3 ?h4 ?first . ?rest)
-
-# Generische Regel für längere Listen
-<list.append.multi> (append (?head . ?tail) ?list) (?head . (append ?tail ?list))
-
-# Zugriff auf Elemente - VOLLSTÄNDIG
-<list.second.two> (second (?first ?second)) ?second
-<list.second.three> (second (?first ?second ?third)) ?second
-<list.second.four> (second (?first ?second ?third ?fourth)) ?second
-<list.second.five> (second (?first ?second ?third ?fourth ?fifth)) ?second
-<list.second.six> (second (?first ?second ?third ?fourth ?fifth ?sixth)) ?second
-<list.second.multi> (second (?first ?second . ?rest)) ?second
-
-<list.third.three> (third (?first ?second ?third)) ?third
-<list.third.four> (third (?first ?second ?third ?fourth)) ?third
-<list.third.five> (third (?first ?second ?third ?fourth ?fifth)) ?third
-<list.third.six> (third (?first ?second ?third ?fourth ?fifth ?sixth)) ?third
-<list.third.multi> (third (?first ?second ?third . ?rest)) ?third
-
-<list.fourth.four> (fourth (?first ?second ?third ?fourth)) ?fourth
-<list.fourth.five> (fourth (?first ?second ?third ?fourth ?fifth)) ?fifth
-<list.fourth.six> (fourth (?first ?second ?third ?fourth ?fifth ?sixth)) ?sixth
-<list.fourth.multi> (fourth (?first ?second ?third ?fourth . ?rest)) ?fourth
-
-# Aggregationsfunktionen - VOLLSTÄNDIG
-<list.sum.empty> (sum ()) 0
-<list.sum.single> (sum (?h)) ?h
-<list.sum.two> (sum (?h1 ?h2)) (+ ?h1 ?h2)
-<list.sum.three> (sum (?h1 ?h2 ?h3)) (+ ?h1 (+ ?h2 ?h3))
-<list.sum.four> (sum (?h1 ?h2 ?h3 ?h4)) (+ ?h1 (+ ?h2 (+ ?h3 ?h4)))
-<list.sum.five> (sum (?h1 ?h2 ?h3 ?h4 ?h5)) (+ ?h1 (+ ?h2 (+ ?h3 (+ ?h4 ?h5))))
-<list.sum.multi> (sum (?h . ?t)) (+ ?h (sum ?t))
-
-<list.product.empty> (product ()) 1
-<list.product.single> (product (?h)) ?h
-<list.product.two> (product (?h1 ?h2)) (* ?h1 ?h2)
-<list.product.three> (product (?h1 ?h2 ?h3)) (* ?h1 (* ?h2 ?h3))
-<list.product.four> (product (?h1 ?h2 ?h3 ?h4)) (* ?h1 (* ?h2 (* ?h3 ?h4)))
-<list.product.five> (product (?h1 ?h2 ?h3 ?h4 ?h5)) (* ?h1 (* ?h2 (* ?h3 (* ?h4 ?h5))))
-<list.product.multi> (product (?h . ?t)) (* ?h (product ?t))
-
-# Liste nehmen/fallen lassen - VOLLSTÄNDIG
-<list.take.zero> (take 0 ?list) ()
-<list.take.empty> (take ?n ()) ()
-
-<list.take.one.single> (take 1 (?head)) (?head)
-<list.take.one.two> (take 1 (?head ?second)) (?head)
-<list.take.one.three> (take 1 (?head ?second ?third)) (?head)
-<list.take.one.four> (take 1 (?head ?second ?third ?fourth)) (?head)
-<list.take.one.five> (take 1 (?head ?second ?third ?fourth ?fifth)) (?head)
-<list.take.one.six> (take 1 (?head ?second ?third ?fourth ?fifth ?sixth)) (?head)
-<list.take.one.multi> (take 1 (?head . ?tail)) (?head)
-
-<list.take.two.two> (take 2 (?h1 ?h2)) (?h1 ?h2)
-<list.take.two.three> (take 2 (?h1 ?h2 ?h3)) (?h1 ?h2)
-<list.take.two.four> (take 2 (?h1 ?h2 ?h3 ?h4)) (?h1 ?h2)
-<list.take.two.five> (take 2 (?h1 ?h2 ?h3 ?h4 ?h5)) (?h1 ?h2)
-<list.take.two.six> (take 2 (?h1 ?h2 ?h3 ?h4 ?h5 ?h6)) (?h1 ?h2)
-<list.take.two.multi> (take 2 (?h1 ?h2 . ?rest)) (?h1 ?h2)
-
-<list.take.three.three> (take 3 (?h1 ?h2 ?h3)) (?h1 ?h2 ?h3)
-<list.take.three.four> (take 3 (?h1 ?h2 ?h3 ?h4)) (?h1 ?h2 ?h3)
-<list.take.three.five> (take 3 (?h1 ?h2 ?h3 ?h4 ?h5)) (?h1 ?h2 ?h3)
-<list.take.three.six> (take 3 (?h1 ?h2 ?h3 ?h4 ?h5 ?h6)) (?h1 ?h2 ?h3)
-<list.take.three.multi> (take 3 (?h1 ?h2 ?h3 . ?rest)) (?h1 ?h2 ?h3)
-
-<list.take.four.four> (take 4 (?h1 ?h2 ?h3 ?h4)) (?h1 ?h2 ?h3 ?h4)
-<list.take.four.five> (take 4 (?h1 ?h2 ?h3 ?h4 ?h5)) (?h1 ?h2 ?h3 ?h4)
-<list.take.four.six> (take 4 (?h1 ?h2 ?h3 ?h4 ?h5 ?h6)) (?h1 ?h2 ?h3 ?h4)
-<list.take.four.multi> (take 4 (?h1 ?h2 ?h3 ?h4 . ?rest)) (?h1 ?h2 ?h3 ?h4)
-
-<list.take.five.five> (take 5 (?h1 ?h2 ?h3 ?h4 ?h5)) (?h1 ?h2 ?h3 ?h4 ?h5)
-<list.take.five.six> (take 5 (?h1 ?h2 ?h3 ?h4 ?h5 ?h6)) (?h1 ?h2 ?h3 ?h4 ?h5)
-<list.take.five.multi> (take 5 (?h1 ?h2 ?h3 ?h4 ?h5 . ?rest)) (?h1 ?h2 ?h3 ?h4 ?h5)
-
-# Generische take-Regel für größere n
-<list.take.multi> (take ?n (?h . ?t)) (?h . (take (- ?n 1) ?t))
-
-<list.drop.zero> (drop 0 ?list) ?list
-<list.drop.empty> (drop ?n ()) ()
-
-<list.drop.one.single> (drop 1 (?head)) ()
-<list.drop.one.two> (drop 1 (?head ?second)) (?second)
-<list.drop.one.three> (drop 1 (?head ?second ?third)) (?second ?third)
-<list.drop.one.four> (drop 1 (?head ?second ?third ?fourth)) (?second ?third ?fourth)
-<list.drop.one.five> (drop 1 (?head ?second ?third ?fourth ?fifth)) (?second ?third ?fourth ?fifth)
-<list.drop.one.six> (drop 1 (?head ?second ?third ?fourth ?fifth ?sixth)) (?second ?third ?fourth ?fifth ?sixth)
-<list.drop.one.multi> (drop 1 (?head . ?tail)) ?tail
-
-<list.drop.two.two> (drop 2 (?h1 ?h2)) ()
-<list.drop.two.three> (drop 2 (?h1 ?h2 ?h3)) (?h3)
-<list.drop.two.four> (drop 2 (?h1 ?h2 ?h3 ?h4)) (?h3 ?h4)
-<list.drop.two.five> (drop 2 (?h1 ?h2 ?h3 ?h4 ?h5)) (?h3 ?h4 ?h5)
-<list.drop.two.six> (drop 2 (?h1 ?h2 ?h3 ?h4 ?h5 ?h6)) (?h3 ?h4 ?h5 ?h6)
-<list.drop.two.multi> (drop 2 (?h1 ?h2 . ?rest)) ?rest
-
-<list.drop.three.three> (drop 3 (?h1 ?h2 ?h3)) ()
-<list.drop.three.four> (drop 3 (?h1 ?h2 ?h3 ?h4)) (?h4)
-<list.drop.three.five> (drop 3 (?h1 ?h2 ?h3 ?h4 ?h5)) (?h4 ?h5)
-<list.drop.three.six> (drop 3 (?h1 ?h2 ?h3 ?h4 ?h5 ?h6)) (?h4 ?h5 ?h6)
-<list.drop.three.multi> (drop 3 (?h1 ?h2 ?h3 . ?rest)) ?rest
-
-<list.drop.four.four> (drop 4 (?h1 ?h2 ?h3 ?h4)) ()
-<list.drop.four.five> (drop 4 (?h1 ?h2 ?h3 ?h4 ?h5)) (?h5)
-<list.drop.four.six> (drop 4 (?h1 ?h2 ?h3 ?h4 ?h5 ?h6)) (?h5 ?h6)
-<list.drop.four.multi> (drop 4 (?h1 ?h2 ?h3 ?h4 . ?rest)) ?rest
-
-<list.drop.five.five> (drop 5 (?h1 ?h2 ?h3 ?h4 ?h5)) ()
-<list.drop.five.six> (drop 5 (?h1 ?h2 ?h3 ?h4 ?h5 ?h6)) (?h6)
-<list.drop.five.multi> (drop 5 (?h1 ?h2 ?h3 ?h4 ?h5 . ?rest)) ?rest
-
-# Generische drop-Regel für größere n
-<list.drop.multi> (drop ?n (?h . ?t)) (drop (- ?n 1) ?t)
+# reverse - List Reversal (with helper)
+<list.reverse> (reverse ?list) (reverse-helper ?list ())
+<list.reverse.helper.empty> (reverse-helper () ?acc) ?acc
+<list.reverse.helper> (reverse-helper (?head . ?tail) ?acc) (reverse-helper ?tail (cons ?head ?acc))
 
 # ==========================================
-# Boolesche Logik (bool)
+# Boolesche Logik
 # ==========================================
 
-<bool.and.false> (and false ?b) false
+<bool.and.false.left> (and false ?b) false
+<bool.and.false.right> (and ?a false) false
 <bool.and.true> (and true ?b) ?b
-<bool.or.true> (or true ?b) true
+<bool.or.true.left> (or true ?b) true
+<bool.or.true.right> (or ?a true) true
 <bool.or.false> (or false ?b) ?b
 <bool.not.true> (not true) false
 <bool.not.false> (not false) true
 
 # ==========================================
-# Vergleichsoperationen (comp)
+# Vergleichsoperationen
 # ==========================================
 
 <comp.eq> (= ?a ?b) (: == ?a ?b)
@@ -248,14 +75,14 @@
 <comp.gte> (>= ?a ?b) (: >= ?a ?b)
 
 # ==========================================
-# Bedingte Ausdrücke (cond)
+# Bedingte Ausdrücke
 # ==========================================
 
 <cond.if.true> (if true ?then ?else) ?then
 <cond.if.false> (if false ?then ?else) ?else
 
 # ==========================================
-# Zusätzliche nützliche Funktionen
+# Utility-Funktionen
 # ==========================================
 
 <math.min> (min ?a ?b) (if (< ?a ?b) ?a ?b)
@@ -263,3 +90,56 @@
 <math.abs> (abs ?a) (if (>= ?a 0) ?a (- 0 ?a))
 <math.even> (even? ?n) (= (% ?n 2) 0)
 <math.odd> (odd? ?n) (!= (% ?n 2) 0)
+
+# ==========================================
+# NEUE Funktionen
+# ==========================================
+
+# map - Higher-Order Function
+<hof.map.empty> (map ?fn ()) ()
+<hof.map> (map ?fn (?head . ?tail)) (cons (apply ?fn ?head) (map ?fn ?tail))
+
+# filter - Higher-Order Function
+<hof.filter.empty> (filter ?pred ()) ()
+<hof.filter.true> (filter ?pred (?head . ?tail)) (if (apply ?pred ?head) (cons ?head (filter ?pred ?tail)) (filter ?pred ?tail))
+
+# fold-left - Reduction
+<hof.fold.left.empty> (fold-left ?fn ?acc ()) ?acc
+<hof.fold.left> (fold-left ?fn ?acc (?head . ?tail)) (fold-left ?fn (apply2 ?fn ?acc ?head) ?tail)
+
+# sum
+<math.sum.empty> (sum ()) 0
+<math.sum> (sum (?head . ?tail)) (+ ?head (sum ?tail))
+
+# product - Einfache Aggregation
+<math.product.empty> (product ()) 1
+<math.product> (product (?head . ?tail)) (* ?head (product ?tail))
+
+# take - Liste kürzen
+<list.take.zero> (take 0 ?list) ()
+<list.take.empty> (take ?n ()) ()
+<list.take> (take ?n (?head . ?tail)) (if (> ?n 0) (cons ?head (take (- ?n 1) ?tail)) ())
+
+# drop - Liste kürzen
+<list.drop.zero> (drop 0 ?list) ?list
+<list.drop.empty> (drop ?n ()) ()
+<list.drop> (drop ?n (?head . ?tail)) (if (> ?n 0) (drop (- ?n 1) ?tail) (?head . ?tail))
+
+# range - Liste generieren
+<list.range.end> (range ?n ?n) ()
+<list.range> (range ?start ?end) (if (< ?start ?end) (cons ?start (range (+ ?start 1) ?end)) ())
+
+# member? - Element suchen
+<list.member.empty> (member? ?elem ()) false
+<list.member.found> (member? ?elem (?elem . ?tail)) true
+<list.member> (member? ?elem (?head . ?tail)) (if (= ?elem ?head) true (member? ?elem ?tail))
+
+# Mathematische Funktionen
+<math.square> (square ?x) (* ?x ?x)
+<math.cube> (cube ?x) (* ?x (* ?x ?x))
+<math.pow.zero> (pow ?x 0) 1
+<math.pow> (pow ?x ?n) (if (= ?n 0) 1 (* ?x (pow ?x (- ?n 1))))
+
+# String-ähnliche Operationen (wenn Sie Strings als Listen behandeln)
+<string.concat.empty> (concat ()) ()
+<string.concat> (concat ((?head . ?tail) . ?rest)) (append ?head (concat ?rest))

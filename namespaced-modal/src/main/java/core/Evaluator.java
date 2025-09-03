@@ -3,8 +3,17 @@ package core;
 public class Evaluator {
 
     public static Term evaluate(Term term) {
+        if (term instanceof Term.Cons cons) {
+            var asList = cons.toList();
+            if (asList.isPresent()) {
+                return evaluate(asList.get());
+            }
+            return Term.cons(evaluate(cons.car()), evaluate(cons.cdr()));
+        }
+
         if (term instanceof Term.List list && !list.isEmpty()) {
             Term head = list.head();
+
             if (head instanceof Term.Atom atom && ":".equals(atom.value())) {
                 return evaluateArithmetic(list);
             }
@@ -31,11 +40,9 @@ public class Evaluator {
         if (list.elements().size() != 4) {
             throw new IllegalArgumentException("Arithmetic evaluation requires exactly 4 elements (: op arg1 arg2)");
         }
-
         Term operator = list.elements().get(1);
         Term arg1 = list.elements().get(2);
         Term arg2 = list.elements().get(3);
-
         if (!(operator instanceof Term.Atom opAtom)) {
             throw new IllegalArgumentException("Operator must be an atom");
         }
@@ -92,7 +99,6 @@ public class Evaluator {
             case "<=" -> (val1 <= val2) ? 1.0 : 0.0;
             default -> throw new IllegalArgumentException("Unknown operator: " + op);
         };
-
 
         if (op.equals(">") || op.equals("<") || op.equals(">=") || op.equals("<=")) {
             return Term.bool(result != 0.0);

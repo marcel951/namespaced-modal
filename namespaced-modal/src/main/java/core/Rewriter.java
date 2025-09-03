@@ -1,4 +1,3 @@
-
 package core;
 
 import debug.Debugger;
@@ -22,12 +21,12 @@ public class Rewriter {
         seenTerms.clear();
         stepCount = 0;
         if (debugger.getMode() == Debugger.Mode.DEBUG) {
-            System.out.println("DEBUG: Starting rewrite of: " + term);
+            System.out.println("DEBUG: Starting outermost rewrite of: " + term);
         }
-        return rewriteInternal(term);
+        return rewriteOutermost(term);
     }
 
-    private Term rewriteInternal(Term term) {
+    private Term rewriteOutermost(Term term) {
         if (++stepCount > MAX_STEPS) {
             throw new IllegalStateException("Rewrite step limit exceeded (mögliche Nichtterminierung durch Regeln).");
         }
@@ -39,21 +38,179 @@ public class Rewriter {
 
         debugger.onStepStart(term);
 
-        Term rewritten = rewriteOnce(term);
-        if (!rewritten.equals(term)) {
-            seenTerms.remove(term);
-            return rewriteInternal(rewritten);
+        Term current = term;
+        boolean changed = true;
+
+        while (changed) {
+            changed = false;
+
+            // SCHRITT 1: Versuche Regeln auf äußerem Term
+            Term ruleResult = tryApplyRules(current);
+            if (!ruleResult.equals(current)) {
+                current = ruleResult;
+                changed = true;
+                continue;
+            }
+
+            // SCHRITT 2: Versuche direkte Evaluation
+            Term evalResult = tryDirectEvaluation(current);
+            if (!evalResult.equals(current)) {
+                current = evalResult;
+                changed = true;
+                continue;
+            }
+
+            // SCHRITT 3: Gehe zu Untertermen
+            Term subResult = rewriteSubterms(current);
+            if (!subResult.equals(current)) {
+                current = subResult;
+                changed = true;
+            }
         }
 
-        Term evaluated = Evaluator.evaluate(term);
-        if (!evaluated.equals(term)) {
-            debugger.onEvaluation(term, evaluated);
-            seenTerms.remove(term);
-            return rewriteInternal(evaluated);
-        }
-
-        debugger.onStepEnd(term);
+        debugger.onStepEnd(current);
         seenTerms.remove(term);
+        return current;
+    }
+
+    private Term tryDirectEvaluation(Term term) {
+        if (!(term instanceof Term.List list) || list.isEmpty()) {
+            return term;
+        }
+
+        Term head = list.head();
+        if (head instanceof Term.Atom atom && ":".equals(atom.value())) {
+            return evaluateArithmetic(list);
+        }
+
+        return term;
+    }
+
+    private Term evaluateArithmetic(Term.List list) {
+        if (list.elements().size() != 4) {
+            throw new IllegalArgumentException("Arithmetic evaluation requires exactly 4 elements (: op arg1 arg2)");
+        }
+
+        Term operator = list.elements().get(1);
+        Term arg1 = list.elements().get(2);
+        Term arg2 = list.elements().get(3);
+
+        if (!(operator instanceof Term.Atom opAtom)) {
+            throw new IllegalArgumentException("Operator must be an atom");
+        }
+
+        return evaluateBinaryOp(opAtom.value(), arg1, arg2);
+    }
+
+    private Term evaluateBinaryOp(String op, Term arg1, Term arg2) {
+        if (!(arg1 instanceof Term.Atom a1) || !(arg2 instanceof Term.Atom a2)) {
+            throw new IllegalArgumentException("Arithmetic arguments must be atoms: " + arg1 + ", " + arg2);
+        }
+
+        switch (op) {
+            case "=" -> {
+                return Term.bool(arg1.equals(arg2));
+            }
+            case "==" -> {
+                return Term.bool(arg1.equals(arg2));
+            }
+            case "!=" -> {
+                return Term.bool(!arg1.equals(arg2));
+            }
+        }
+
+        if (!a1.isNumber() || !a2.isNumber()) {
+            throw new IllegalArgumentException("Arithmetic arguments must be numbers: " + arg1 + ", " + arg2);
+        }
+
+        double val1 = a1.asDouble();
+        double val2 = a2.asDouble();
+
+        double result = switch (op) {
+            case "+" -> val1 + val2;
+            case "-" -> val1 - val2;
+            case "*" -> val1 * val2;
+            case "/" -> {
+                if (val2 == 0.0) throw new ArithmeticException("Division by zero");
+                yield val1 / val2;
+            }
+            case "%" -> {
+                if (val2 == 0.0) throw new ArithmeticException("Division by zero");
+                yield val1 % val2;
+            }
+            case "mod" -> {
+                if (val2 == 0.0) throw new ArithmeticException("Division by zero");
+                yield val1 % val2;
+            }
+            case ">" -> (val1 > val2) ? 1.0 : 0.0;
+            case "<" -> (val1 < val2) ? 1.0 : 0.0;
+            case ">=" -> (val1 >= val2) ? 1.0 : 0.0;
+            case "<=" -> (val1 <= val2) ? 1.0 : 0.0;
+            default -> throw new IllegalArgumentException("Unknown operator: " + op);
+        };
+
+        if (op.equals(">") || op.equals("<") || op.equals(">=") || op.equals("<=")) {
+            return Term.bool(result != 0.0);
+        }
+
+        return Term.number(result);
+    }
+
+    private Term tryApplyRules(Term term) {
+        if (!(term instanceof Term.List list) || list.isEmpty()) {
+            return term;
+        }
+
+        String functionSymbol = list.getFunctionSymbol();
+        validateDomainConstraints(term, functionSymbol, list);
+
+        var rulesForFunction = ruleSet.getRulesForFunction(functionSymbol);
+
+        for (Rule rule : rulesForFunction) {
+            Optional<Map<String, Term>> match = RuleMatcher.match(rule.pattern(), term);
+
+            if (match.isPresent()) {
+                // KRITISCH: Evaluiere Bindings vor Substitution!
+                Map<String, Term> evaluatedBindings = new HashMap<>();
+                for (Map.Entry<String, Term> entry : match.get().entrySet()) {
+                    Term evaluatedValue = rewriteOutermost(entry.getValue()); // Rekursiv evaluieren!
+                    evaluatedBindings.put(entry.getKey(), evaluatedValue);
+                }
+
+                Term result = RuleMatcher.substitute(rule.replacement(), evaluatedBindings);
+                debugger.onRuleApplied(rule, term, result);
+
+                if (!debugger.shouldContinue()) {
+                    return term;
+                }
+
+                return result;
+            }
+        }
+
+        return term;
+    }
+
+    private Term rewriteSubterms(Term term) {
+        if (!(term instanceof Term.List list) || list.isEmpty()) {
+            return term;
+        }
+
+        java.util.List<Term> newElements = new ArrayList<>();
+        boolean changed = false;
+
+        for (Term element : list.elements()) {
+            Term rewrittenElement = rewriteOutermost(element);
+            newElements.add(rewrittenElement);
+            if (!rewrittenElement.equals(element)) {
+                changed = true;
+            }
+        }
+
+        if (changed) {
+            return new Term.List(newElements);
+        }
+
         return term;
     }
 
@@ -61,109 +218,28 @@ public class Rewriter {
         if (t instanceof Term.Atom a && a.isNumber()) {
             try {
                 return a.asDouble() < 0;
-            } catch (NumberFormatException ignored) { /* nicht numerisch */ }
+            } catch (NumberFormatException ignored) {
+            }
         }
         return false;
     }
 
-    private Term rewriteOnce(Term term) {
-        if (debugger.getMode() == Debugger.Mode.DEBUG) {
-            System.out.println("DEBUG: rewriteOnce called with: " + term);
-        }
-
-        if (term instanceof Term.List list && !list.isEmpty()) {
-            String functionSymbol = list.getFunctionSymbol();
-
-            // DOMAIN GUARDS: Verhindere nicht-terminierende Umschreibungen
-            if ("pow".equals(functionSymbol)) {
-                if (list.elements().size() >= 3) {
-                    Term exp = list.elements().get(2);
-                    if (isNegativeNumber(exp)) {
-                        throw new IllegalArgumentException("pow mit negativem Exponenten wird nicht unterstützt: " + term);
-                    }
+    private void validateDomainConstraints(Term term, String functionSymbol, Term.List list) {
+        if ("fact".equals(functionSymbol)) {
+            if (list.elements().size() >= 2) {
+                Term n = list.elements().get(1);
+                if (isNegativeNumber(n)) {
+                    throw new IllegalArgumentException("factorial ist für negative Eingaben nicht definiert: " + term);
                 }
-            }
-            if ("fact".equals(functionSymbol)) {
-                if (list.elements().size() >= 2) {
-                    Term n = list.elements().get(1);
-                    if (isNegativeNumber(n)) {
-                        throw new IllegalArgumentException("factorial ist für negative Eingaben nicht definiert: " + term);
-                    }
-                }
-            }
-            if ("fib".equals(functionSymbol)) {
-                if (list.elements().size() >= 2) {
-                    Term n = list.elements().get(1);
-                    if (isNegativeNumber(n)) {
-                        throw new IllegalArgumentException("fibonacci ist für negative Eingaben nicht definiert: " + term);
-                    }
-                }
-            }
-            if ("take".equals(functionSymbol) || "drop".equals(functionSymbol)) {
-                if (list.elements().size() >= 2) {
-                    Term n = list.elements().get(1);
-                    if (isNegativeNumber(n)) {
-                        throw new IllegalArgumentException(functionSymbol + " mit negativem n ist nicht definiert: " + term);
-                    }
-                }
-            }
-
-            if (debugger.getMode() == Debugger.Mode.DEBUG) {
-                System.out.println("DEBUG: Function symbol: '" + functionSymbol + "'");
-            }
-
-            var rulesForFunction = ruleSet.getRulesForFunction(functionSymbol);
-            if (debugger.getMode() == Debugger.Mode.DEBUG) {
-                System.out.println("DEBUG: Found " + rulesForFunction.size() + " rules for function '" + functionSymbol + "'");
-            }
-
-            for (Rule rule : rulesForFunction) {
-                if (debugger.getMode() == Debugger.Mode.DEBUG) {
-                    System.out.println("DEBUG: Trying rule: " + rule);
-                    System.out.println("DEBUG: Pattern: " + rule.pattern());
-                    System.out.println("DEBUG: Term: " + term);
-                }
-
-                Optional<Map<String, Term>> match =
-                        debugger.getMode() == Debugger.Mode.DEBUG ?
-                                RuleMatcher.matchDebug(rule.pattern(), term) :
-                                RuleMatcher.match(rule.pattern(), term);
-
-                if (match.isPresent()) {
-                    if (debugger.getMode() == Debugger.Mode.DEBUG) {
-                        System.out.println("DEBUG: Rule matched!");
-                    }
-                    Term result = RuleMatcher.substitute(rule.replacement(), match.get());
-                    debugger.onRuleApplied(rule, term, result);
-
-                    if (!debugger.shouldContinue()) {
-                        return term;
-                    }
-
-                    return result;
-                } else {
-                    if (debugger.getMode() == Debugger.Mode.DEBUG) {
-                        System.out.println("DEBUG: Rule did not match");
-                    }
-                }
-            }
-
-            java.util.List<Term> newElements = new ArrayList<>();
-            boolean changed = false;
-
-            for (Term element : list.elements()) {
-                Term rewrittenElement = rewriteInternal(element); // Use rewriteInternal for subterms
-                newElements.add(rewrittenElement);
-                if (!rewrittenElement.equals(element)) {
-                    changed = true;
-                }
-            }
-
-            if (changed) {
-                return new Term.List(newElements);
             }
         }
-
-        return term;
+        if ("fib".equals(functionSymbol)) {
+            if (list.elements().size() >= 2) {
+                Term n = list.elements().get(1);
+                if (isNegativeNumber(n)) {
+                    throw new IllegalArgumentException("fibonacci ist für negative Eingaben nicht definiert: " + term);
+                }
+            }
+        }
     }
 }

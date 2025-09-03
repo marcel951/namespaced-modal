@@ -61,9 +61,8 @@ public class RuleParser {
 
         String namespace = matcher.group(1);
         String name = matcher.group(2);
-        String rest = matcher.group(3);  // Everything after the rule name
+        String rest = matcher.group(3);
 
-        // Parse pattern and replacement manually
         String[] parts = parsePatternAndReplacement(rest);
         String patternStr = parts[0];
         String replacementStr = parts[1];
@@ -78,7 +77,6 @@ public class RuleParser {
         rest = rest.trim();
 
         if (rest.startsWith("(")) {
-            // Pattern starts with '(' - find the matching closing parenthesis
             int depth = 0;
             int i = 0;
 
