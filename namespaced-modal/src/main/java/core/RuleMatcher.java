@@ -111,12 +111,21 @@ public class RuleMatcher {
                 return template;
             }
             case Term.List list -> {
+                if (list.elements().size() == 3 &&
+                        list.elements().get(1) instanceof Term.Atom atom &&
+                        ".".equals(atom.value())) {
+                    Term head = substitute(list.elements().get(0), bindings);
+                    Term tail = substitute(list.elements().get(2), bindings);
+                    return new Term.List(java.util.List.of(head, tail));
+                }
+
                 java.util.List<Term> newElements = new ArrayList<>();
                 for (Term element : list.elements()) {
                     newElements.add(substitute(element, bindings));
                 }
                 return new Term.List(newElements);
             }
+            default -> throw new IllegalStateException("Unexpected term type: " + template.getClass());
         }
     }
 }

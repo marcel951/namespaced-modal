@@ -57,15 +57,6 @@ public class Rewriter {
         return term;
     }
 
-    private static boolean isNegativeNumber(Term t) {
-        if (t instanceof Term.Atom a && a.isNumber()) {
-            try {
-                return a.asDouble() < 0;
-            } catch (NumberFormatException ignored) { /* nicht numerisch */ }
-        }
-        return false;
-    }
-
     private Term rewriteOnce(Term term) {
         if (debugger.getMode() == Debugger.Mode.DEBUG) {
             System.out.println("DEBUG: rewriteOnce called with: " + term);
@@ -74,37 +65,13 @@ public class Rewriter {
         if (term instanceof Term.List list && !list.isEmpty()) {
             String functionSymbol = list.getFunctionSymbol();
 
-            // DOMAIN GUARDS: Verhindere nicht-terminierende Umschreibungen
-            if ("pow".equals(functionSymbol)) {
-                if (list.elements().size() >= 3) {
-                    Term exp = list.elements().get(2);
-                    if (isNegativeNumber(exp)) {
-                        throw new IllegalArgumentException("pow mit negativem Exponenten wird nicht unterstützt: " + term);
-                    }
-                }
-            }
-            if ("fact".equals(functionSymbol)) {
-                if (list.elements().size() >= 2) {
-                    Term n = list.elements().get(1);
-                    if (isNegativeNumber(n)) {
-                        throw new IllegalArgumentException("factorial ist für negative Eingaben nicht definiert: " + term);
-                    }
-                }
-            }
-            if ("fib".equals(functionSymbol)) {
-                if (list.elements().size() >= 2) {
-                    Term n = list.elements().get(1);
-                    if (isNegativeNumber(n)) {
-                        throw new IllegalArgumentException("fibonacci ist für negative Eingaben nicht definiert: " + term);
-                    }
-                }
-            }
-            if ("take".equals(functionSymbol) || "drop".equals(functionSymbol)) {
-                if (list.elements().size() >= 2) {
-                    Term n = list.elements().get(1);
-                    if (isNegativeNumber(n)) {
-                        throw new IllegalArgumentException(functionSymbol + " mit negativem n ist nicht definiert: " + term);
-                    }
+            for (int i = 0; i < list.elements().size(); i++) {
+                Term element = list.elements().get(i);
+                Term rewrittenElement = rewriteOnce(element);
+                if (!rewrittenElement.equals(element)) {
+                    java.util.List<Term> newElements = new ArrayList<>(list.elements());
+                    newElements.set(i, rewrittenElement);
+                    return new Term.List(newElements);
                 }
             }
 
@@ -146,21 +113,6 @@ public class Rewriter {
                         System.out.println("DEBUG: Rule did not match");
                     }
                 }
-            }
-
-            java.util.List<Term> newElements = new ArrayList<>();
-            boolean changed = false;
-
-            for (Term element : list.elements()) {
-                Term rewrittenElement = rewriteInternal(element); // Use rewriteInternal for subterms
-                newElements.add(rewrittenElement);
-                if (!rewrittenElement.equals(element)) {
-                    changed = true;
-                }
-            }
-
-            if (changed) {
-                return new Term.List(newElements);
             }
         }
 

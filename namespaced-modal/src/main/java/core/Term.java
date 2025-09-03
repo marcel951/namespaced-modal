@@ -84,19 +84,18 @@ public sealed interface Term permits Term.Atom, Term.List {
         @Override
         public String toString() {
             // Prüfe ob es eine gepunktete Liste (Cons-Cell) ist
-            if (elements.size() == 2 && isDottedList()) {
-                return "(" + elements.get(0) + " . " + elements.get(1) + ")";
+            if (isDottedList()) {
+                return "(" + elements.get(0) + " . " + elements.get(2) + ")";
             }
-            
+
             // Normale Listenformatierung
             return "(" + String.join(" ", elements.stream().map(Term::toString).toArray(String[]::new)) + ")";
         }
 
         private boolean isDottedList() {
-
-            return elements.size() == 2 && 
-                   elements.get(1) instanceof Term.List list && 
-                   !list.isEmpty();
+            return elements.size() == 3 &&
+                   elements.get(1) instanceof Term.Atom atom &&
+                   ".".equals(atom.value());
         }
     }
 

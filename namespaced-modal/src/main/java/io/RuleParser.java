@@ -13,6 +13,7 @@ import java.util.regex.Pattern;
 
 public class RuleParser {
     private static final Pattern RULE_HEADER_PATTERN = Pattern.compile("^<([^.]+)\\.([^>]+)>\\s+(.*)$");
+    private static int anonymousRuleCounter = 0;
 
     public static RuleSet loadFromResource(String resourcePath) {
         try (InputStream is = RuleParser.class.getClassLoader().getResourceAsStream(resourcePath)) {
@@ -55,13 +56,18 @@ public class RuleParser {
 
     private static Rule parseRule(String line) {
         Matcher matcher = RULE_HEADER_PATTERN.matcher(line);
-        if (!matcher.matches()) {
-            throw new IllegalArgumentException("Invalid rule syntax: " + line);
+        String namespace;
+        String name;
+        String rest;
+        if (matcher.matches()) {
+            namespace = matcher.group(1);
+            name = matcher.group(2);
+            rest = matcher.group(3);
+        } else {
+            namespace = "default";
+            name = "rule" + (anonymousRuleCounter++);
+            rest = line;
         }
-
-        String namespace = matcher.group(1);
-        String name = matcher.group(2);
-        String rest = matcher.group(3);  // Everything after the rule name
 
         // Parse pattern and replacement manually
         String[] parts = parsePatternAndReplacement(rest);
