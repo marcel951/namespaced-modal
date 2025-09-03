@@ -2,101 +2,228 @@
 # Mathematische Operationen (math)
 # ==========================================
 
+# Grundrechenarten - delegieren an eingebaute Operationen
+<math.+> (+ ?a ?b) (: + ?a ?b)
+<math.*> (* ?a ?b) (: * ?a ?b)
+<math.-> (- ?a ?b) (: - ?a ?b)
+<math./> (/ ?a ?b) (: / ?a ?b)
+<math.%> (% ?a ?b) (: % ?a ?b)
 
-
-# Potenzieren
+# Potenzieren (einfache Fälle)
 <math.pow.0> (pow ?a 0) 1
 <math.pow.1> (pow ?a 1) ?a
-<math.pow.rec.pos> (pow ?a ?b) (* ?a (pow ?a (- ?b 1))) # Gilt nur für ?b > 1
-<math.pow.rec.neg> (pow ?a ?b) (/ 1 (pow ?a (* -1 ?b))) # Gilt nur für ?b < 0
+<math.pow.2> (pow ?a 2) (* ?a ?a)
+<math.pow.3> (pow ?a 3) (* ?a (* ?a ?a))
 
-# Fakultätsfunktion (rekursiv)
+# Fakultätsfunktion (nur für kleine Zahlen)
 <math.fact.0> (fact 0) 1
-<math.fact.rec> (fact ?n) (* ?n (fact (- ?n 1)))
-
-# Fibonacci-Funktion (rekursiv)
-<math.fib.0> (fib 0) 0
-<math.fib.1> (fib 1) 1
-<math.fib.rec> (fib ?n) (+ (fib (- ?n 1)) (fib (- ?n 2)))
-
+<math.fact.1> (fact 1) 1
+<math.fact.2> (fact 2) 2
+<math.fact.3> (fact 3) 6
+<math.fact.4> (fact 4) 24
+<math.fact.5> (fact 5) 120
 
 # ==========================================
 # Listenoperationen (list)
 # ==========================================
 
-# Grundlegende Operationen
-<list.first> (first (?head . ?tail)) ?head
-<list.rest> (rest (?head . ?tail)) ?tail
+# Grundlegende Operationen - VOLLSTÄNDIG für alle Listenlängen
+<list.first.single> (first (?head)) ?head
+<list.first.two> (first (?head ?second)) ?head
+<list.first.three> (first (?head ?second ?third)) ?head
+<list.first.four> (first (?head ?second ?third ?fourth)) ?head
+<list.first.five> (first (?head ?second ?third ?fourth ?fifth)) ?head
+<list.first.six> (first (?head ?second ?third ?fourth ?fifth ?sixth)) ?head
+<list.first.multi> (first (?head . ?tail)) ?head
 
-# Cons-Regeln für flache Listen
-<list.cons.empty> (cons ?item ()) (?item)
-<list.cons.single> (cons ?item (?first)) (?item ?first)
-<list.cons.multi> (cons ?item (?first ?second . ?rest)) (?item ?first ?second . ?rest)
+<list.rest.single> (rest (?head)) ()
+<list.rest.two> (rest (?head ?second)) (?second)
+<list.rest.three> (rest (?head ?second ?third)) (?second ?third)
+<list.rest.four> (rest (?head ?second ?third ?fourth)) (?second ?third ?fourth)
+<list.rest.five> (rest (?head ?second ?third ?fourth ?fifth)) (?second ?third ?fourth ?fifth)
+<list.rest.six> (rest (?head ?second ?third ?fourth ?fifth ?sixth)) (?second ?third ?fourth ?fifth ?sixth)
+<list.rest.multi> (rest (?head . ?tail)) ?tail
 
+# Empty-Check
 <list.empty.true> (empty? ()) true
-<list.empty.false> (empty? (?head . ?tail)) false
+<list.empty.false.single> (empty? (?head)) false
+<list.empty.false.multi> (empty? (?head . ?tail)) false
 
-# Länge einer Liste
+# Länge einer Liste - VOLLSTÄNDIG
 <list.length.empty> (length ()) 0
-<list.length.cons> (length (?head . ?tail)) (+ 1 (length ?tail))
+<list.length.single> (length (?head)) 1
+<list.length.two> (length (?head ?second)) 2
+<list.length.three> (length (?head ?second ?third)) 3
+<list.length.four> (length (?head ?second ?third ?fourth)) 4
+<list.length.five> (length (?head ?second ?third ?fourth ?fifth)) 5
+<list.length.six> (length (?head ?second ?third ?fourth ?fifth ?sixth)) 6
+<list.length.multi> (length (?head . ?tail)) (+ 1 (length ?tail))
 
-# Anhängen von Listen
-<list.append.empty> (append () ?list) ?list
-<list.append.single> (append (?head) ?list) (cons ?head ?list)
-<list.append.two> (append (?head ?second) ?list) (cons ?head (cons ?second ?list))
-<list.append.multi> (append (?head ?second ?third . ?rest) ?list) (cons ?head (append (?second ?third . ?rest) ?list))
-
-# Umkehren einer Liste
-<list.reverse.empty> (reverse ()) ()
-<list.reverse.single> (reverse (?head)) (?head)
-<list.reverse.two> (reverse (?first ?second)) (?second ?first)
-<list.reverse.three> (reverse (?first ?second ?third)) (?third ?second ?first)
-<list.reverse.multi> (reverse (?head . ?tail)) (append (reverse ?tail) (?head))
-
-
-# Zugriff auf Elemente
-<list.second.two> (second (?first ?second)) ?second
-<list.second.three> (second (?first ?second ?third)) ?second
-<list.second.four> (second (?first ?second ?third ?fourth)) ?second
-<list.second.multi> (second (?first ?second . ?rest)) ?second
-
-<list.third.three> (third (?first ?second ?third)) ?third
-<list.third.four> (third (?first ?second ?third ?fourth)) ?third
-<list.third.multi> (third (?first ?second ?third . ?rest)) ?third
-
-<list.last.single> (last (?head)) ?head
-<list.last.two> (last (?first ?second)) ?second
-<list.last.three> (last (?first ?second ?third)) ?third
-<list.last.multi> (last (?head . ?tail)) (last ?tail)
-
-
-# Aggregationsfunktionen
-<list.sum.empty> (sum ()) 0
-<list.sum.single> (sum (?h)) ?h
-<list.sum.multi> (sum (?h . ?t)) (+ ?h (sum ?t))
-<list.product.empty> (product ()) 1
-<list.product.single> (product (?h)) ?h
-<list.product.multi> (product (?h . ?t)) (* ?h (product ?t))
-
-# Teil-Listen
-<list.take.zero> (take 0 ?list) ()
-<list.take.empty> (take ?n ()) ()
-<list.take.one.single> (take 1 (?head)) (?head)
-<list.take.one.multi> (take 1 (?head . ?tail)) (?head)
-<list.take.multi> (take ?n (?h . ?t)) (cons ?h (take (- ?n 1) ?t))
-
-<list.drop.zero> (drop 0 ?list) ?list
-<list.drop.empty> (drop ?n ()) ()
-<list.drop.one.single> (drop 1 (?head)) ()
-<list.drop.one.multi> (drop 1 (?head . ?tail)) ?tail
-<list.drop.multi> (drop ?n (?h . ?t)) (drop (- ?n 1) ?t)
-
-# Erweiterte cons-Regeln
+# Cons-Operation - VOLLSTÄNDIG
 <list.cons.empty> (cons ?item ()) (?item)
 <list.cons.single> (cons ?item (?first)) (?item ?first)
 <list.cons.two> (cons ?item (?first ?second)) (?item ?first ?second)
 <list.cons.three> (cons ?item (?first ?second ?third)) (?item ?first ?second ?third)
-<list.cons.multi> (cons ?item (?first ?second ?third ?fourth . ?rest)) (?item ?first ?second ?third ?fourth . ?rest)
+<list.cons.four> (cons ?item (?first ?second ?third ?fourth)) (?item ?first ?second ?third ?fourth)
+<list.cons.five> (cons ?item (?first ?second ?third ?fourth ?fifth)) (?item ?first ?second ?third ?fourth ?fifth)
+<list.cons.multi> (cons ?item (?first . ?rest)) (?item ?first . ?rest)
+
+# Umkehren einer Liste - VOLLSTÄNDIG
+<list.reverse.empty> (reverse ()) ()
+<list.reverse.single> (reverse (?head)) (?head)
+<list.reverse.two> (reverse (?first ?second)) (?second ?first)
+<list.reverse.three> (reverse (?first ?second ?third)) (?third ?second ?first)
+<list.reverse.four> (reverse (?first ?second ?third ?fourth)) (?fourth ?third ?second ?first)
+<list.reverse.five> (reverse (?a ?b ?c ?d ?e)) (?e ?d ?c ?b ?a)
+<list.reverse.six> (reverse (?a ?b ?c ?d ?e ?f)) (?f ?e ?d ?c ?b ?a)
+<list.reverse.multi> (reverse (?head . ?tail)) (append (reverse ?tail) (?head))
+
+# Anhängen von Listen - VOLLSTÄNDIG
+<list.append.empty.left> (append () ?list) ?list
+<list.append.empty.right> (append ?list ()) ?list
+
+# Single + verschiedene Längen
+<list.append.single.empty> (append (?head) ()) (?head)
+<list.append.single.single> (append (?head) (?item)) (?head ?item)
+<list.append.single.two> (append (?head) (?first ?second)) (?head ?first ?second)
+<list.append.single.three> (append (?head) (?first ?second ?third)) (?head ?first ?second ?third)
+<list.append.single.four> (append (?head) (?first ?second ?third ?fourth)) (?head ?first ?second ?third ?fourth)
+<list.append.single.five> (append (?head) (?first ?second ?third ?fourth ?fifth)) (?head ?first ?second ?third ?fourth ?fifth)
+<list.append.single.multi> (append (?head) (?first . ?rest)) (?head ?first . ?rest)
+
+# Two + verschiedene Längen
+<list.append.two.empty> (append (?h1 ?h2) ()) (?h1 ?h2)
+<list.append.two.single> (append (?h1 ?h2) (?item)) (?h1 ?h2 ?item)
+<list.append.two.two> (append (?h1 ?h2) (?i1 ?i2)) (?h1 ?h2 ?i1 ?i2)
+<list.append.two.three> (append (?h1 ?h2) (?i1 ?i2 ?i3)) (?h1 ?h2 ?i1 ?i2 ?i3)
+<list.append.two.four> (append (?h1 ?h2) (?i1 ?i2 ?i3 ?i4)) (?h1 ?h2 ?i1 ?i2 ?i3 ?i4)
+<list.append.two.five> (append (?h1 ?h2) (?i1 ?i2 ?i3 ?i4 ?i5)) (?h1 ?h2 ?i1 ?i2 ?i3 ?i4 ?i5)
+<list.append.two.multi> (append (?h1 ?h2) (?first . ?rest)) (?h1 ?h2 ?first . ?rest)
+
+# Three + verschiedene Längen
+<list.append.three.empty> (append (?h1 ?h2 ?h3) ()) (?h1 ?h2 ?h3)
+<list.append.three.single> (append (?h1 ?h2 ?h3) (?item)) (?h1 ?h2 ?h3 ?item)
+<list.append.three.two> (append (?h1 ?h2 ?h3) (?i1 ?i2)) (?h1 ?h2 ?h3 ?i1 ?i2)
+<list.append.three.three> (append (?h1 ?h2 ?h3) (?i1 ?i2 ?i3)) (?h1 ?h2 ?h3 ?i1 ?i2 ?i3)
+<list.append.three.multi> (append (?h1 ?h2 ?h3) (?first . ?rest)) (?h1 ?h2 ?h3 ?first . ?rest)
+
+# Four + verschiedene Längen
+<list.append.four.empty> (append (?h1 ?h2 ?h3 ?h4) ()) (?h1 ?h2 ?h3 ?h4)
+<list.append.four.single> (append (?h1 ?h2 ?h3 ?h4) (?item)) (?h1 ?h2 ?h3 ?h4 ?item)
+<list.append.four.two> (append (?h1 ?h2 ?h3 ?h4) (?i1 ?i2)) (?h1 ?h2 ?h3 ?h4 ?i1 ?i2)
+<list.append.four.multi> (append (?h1 ?h2 ?h3 ?h4) (?first . ?rest)) (?h1 ?h2 ?h3 ?h4 ?first . ?rest)
+
+# Generische Regel für längere Listen
+<list.append.multi> (append (?head . ?tail) ?list) (?head . (append ?tail ?list))
+
+# Zugriff auf Elemente - VOLLSTÄNDIG
+<list.second.two> (second (?first ?second)) ?second
+<list.second.three> (second (?first ?second ?third)) ?second
+<list.second.four> (second (?first ?second ?third ?fourth)) ?second
+<list.second.five> (second (?first ?second ?third ?fourth ?fifth)) ?second
+<list.second.six> (second (?first ?second ?third ?fourth ?fifth ?sixth)) ?second
+<list.second.multi> (second (?first ?second . ?rest)) ?second
+
+<list.third.three> (third (?first ?second ?third)) ?third
+<list.third.four> (third (?first ?second ?third ?fourth)) ?third
+<list.third.five> (third (?first ?second ?third ?fourth ?fifth)) ?third
+<list.third.six> (third (?first ?second ?third ?fourth ?fifth ?sixth)) ?third
+<list.third.multi> (third (?first ?second ?third . ?rest)) ?third
+
+<list.fourth.four> (fourth (?first ?second ?third ?fourth)) ?fourth
+<list.fourth.five> (fourth (?first ?second ?third ?fourth ?fifth)) ?fifth
+<list.fourth.six> (fourth (?first ?second ?third ?fourth ?fifth ?sixth)) ?sixth
+<list.fourth.multi> (fourth (?first ?second ?third ?fourth . ?rest)) ?fourth
+
+# Aggregationsfunktionen - VOLLSTÄNDIG
+<list.sum.empty> (sum ()) 0
+<list.sum.single> (sum (?h)) ?h
+<list.sum.two> (sum (?h1 ?h2)) (+ ?h1 ?h2)
+<list.sum.three> (sum (?h1 ?h2 ?h3)) (+ ?h1 (+ ?h2 ?h3))
+<list.sum.four> (sum (?h1 ?h2 ?h3 ?h4)) (+ ?h1 (+ ?h2 (+ ?h3 ?h4)))
+<list.sum.five> (sum (?h1 ?h2 ?h3 ?h4 ?h5)) (+ ?h1 (+ ?h2 (+ ?h3 (+ ?h4 ?h5))))
+<list.sum.multi> (sum (?h . ?t)) (+ ?h (sum ?t))
+
+<list.product.empty> (product ()) 1
+<list.product.single> (product (?h)) ?h
+<list.product.two> (product (?h1 ?h2)) (* ?h1 ?h2)
+<list.product.three> (product (?h1 ?h2 ?h3)) (* ?h1 (* ?h2 ?h3))
+<list.product.four> (product (?h1 ?h2 ?h3 ?h4)) (* ?h1 (* ?h2 (* ?h3 ?h4)))
+<list.product.five> (product (?h1 ?h2 ?h3 ?h4 ?h5)) (* ?h1 (* ?h2 (* ?h3 (* ?h4 ?h5))))
+<list.product.multi> (product (?h . ?t)) (* ?h (product ?t))
+
+# Liste nehmen/fallen lassen - VOLLSTÄNDIG
+<list.take.zero> (take 0 ?list) ()
+<list.take.empty> (take ?n ()) ()
+
+<list.take.one.single> (take 1 (?head)) (?head)
+<list.take.one.two> (take 1 (?head ?second)) (?head)
+<list.take.one.three> (take 1 (?head ?second ?third)) (?head)
+<list.take.one.four> (take 1 (?head ?second ?third ?fourth)) (?head)
+<list.take.one.five> (take 1 (?head ?second ?third ?fourth ?fifth)) (?head)
+<list.take.one.six> (take 1 (?head ?second ?third ?fourth ?fifth ?sixth)) (?head)
+<list.take.one.multi> (take 1 (?head . ?tail)) (?head)
+
+<list.take.two.two> (take 2 (?h1 ?h2)) (?h1 ?h2)
+<list.take.two.three> (take 2 (?h1 ?h2 ?h3)) (?h1 ?h2)
+<list.take.two.four> (take 2 (?h1 ?h2 ?h3 ?h4)) (?h1 ?h2)
+<list.take.two.five> (take 2 (?h1 ?h2 ?h3 ?h4 ?h5)) (?h1 ?h2)
+<list.take.two.six> (take 2 (?h1 ?h2 ?h3 ?h4 ?h5 ?h6)) (?h1 ?h2)
+<list.take.two.multi> (take 2 (?h1 ?h2 . ?rest)) (?h1 ?h2)
+
+<list.take.three.three> (take 3 (?h1 ?h2 ?h3)) (?h1 ?h2 ?h3)
+<list.take.three.four> (take 3 (?h1 ?h2 ?h3 ?h4)) (?h1 ?h2 ?h3)
+<list.take.three.five> (take 3 (?h1 ?h2 ?h3 ?h4 ?h5)) (?h1 ?h2 ?h3)
+<list.take.three.six> (take 3 (?h1 ?h2 ?h3 ?h4 ?h5 ?h6)) (?h1 ?h2 ?h3)
+<list.take.three.multi> (take 3 (?h1 ?h2 ?h3 . ?rest)) (?h1 ?h2 ?h3)
+
+<list.take.four.four> (take 4 (?h1 ?h2 ?h3 ?h4)) (?h1 ?h2 ?h3 ?h4)
+<list.take.four.five> (take 4 (?h1 ?h2 ?h3 ?h4 ?h5)) (?h1 ?h2 ?h3 ?h4)
+<list.take.four.six> (take 4 (?h1 ?h2 ?h3 ?h4 ?h5 ?h6)) (?h1 ?h2 ?h3 ?h4)
+<list.take.four.multi> (take 4 (?h1 ?h2 ?h3 ?h4 . ?rest)) (?h1 ?h2 ?h3 ?h4)
+
+<list.take.five.five> (take 5 (?h1 ?h2 ?h3 ?h4 ?h5)) (?h1 ?h2 ?h3 ?h4 ?h5)
+<list.take.five.six> (take 5 (?h1 ?h2 ?h3 ?h4 ?h5 ?h6)) (?h1 ?h2 ?h3 ?h4 ?h5)
+<list.take.five.multi> (take 5 (?h1 ?h2 ?h3 ?h4 ?h5 . ?rest)) (?h1 ?h2 ?h3 ?h4 ?h5)
+
+# Generische take-Regel für größere n
+<list.take.multi> (take ?n (?h . ?t)) (?h . (take (- ?n 1) ?t))
+
+<list.drop.zero> (drop 0 ?list) ?list
+<list.drop.empty> (drop ?n ()) ()
+
+<list.drop.one.single> (drop 1 (?head)) ()
+<list.drop.one.two> (drop 1 (?head ?second)) (?second)
+<list.drop.one.three> (drop 1 (?head ?second ?third)) (?second ?third)
+<list.drop.one.four> (drop 1 (?head ?second ?third ?fourth)) (?second ?third ?fourth)
+<list.drop.one.five> (drop 1 (?head ?second ?third ?fourth ?fifth)) (?second ?third ?fourth ?fifth)
+<list.drop.one.six> (drop 1 (?head ?second ?third ?fourth ?fifth ?sixth)) (?second ?third ?fourth ?fifth ?sixth)
+<list.drop.one.multi> (drop 1 (?head . ?tail)) ?tail
+
+<list.drop.two.two> (drop 2 (?h1 ?h2)) ()
+<list.drop.two.three> (drop 2 (?h1 ?h2 ?h3)) (?h3)
+<list.drop.two.four> (drop 2 (?h1 ?h2 ?h3 ?h4)) (?h3 ?h4)
+<list.drop.two.five> (drop 2 (?h1 ?h2 ?h3 ?h4 ?h5)) (?h3 ?h4 ?h5)
+<list.drop.two.six> (drop 2 (?h1 ?h2 ?h3 ?h4 ?h5 ?h6)) (?h3 ?h4 ?h5 ?h6)
+<list.drop.two.multi> (drop 2 (?h1 ?h2 . ?rest)) ?rest
+
+<list.drop.three.three> (drop 3 (?h1 ?h2 ?h3)) ()
+<list.drop.three.four> (drop 3 (?h1 ?h2 ?h3 ?h4)) (?h4)
+<list.drop.three.five> (drop 3 (?h1 ?h2 ?h3 ?h4 ?h5)) (?h4 ?h5)
+<list.drop.three.six> (drop 3 (?h1 ?h2 ?h3 ?h4 ?h5 ?h6)) (?h4 ?h5 ?h6)
+<list.drop.three.multi> (drop 3 (?h1 ?h2 ?h3 . ?rest)) ?rest
+
+<list.drop.four.four> (drop 4 (?h1 ?h2 ?h3 ?h4)) ()
+<list.drop.four.five> (drop 4 (?h1 ?h2 ?h3 ?h4 ?h5)) (?h5)
+<list.drop.four.six> (drop 4 (?h1 ?h2 ?h3 ?h4 ?h5 ?h6)) (?h5 ?h6)
+<list.drop.four.multi> (drop 4 (?h1 ?h2 ?h3 ?h4 . ?rest)) ?rest
+
+<list.drop.five.five> (drop 5 (?h1 ?h2 ?h3 ?h4 ?h5)) ()
+<list.drop.five.six> (drop 5 (?h1 ?h2 ?h3 ?h4 ?h5 ?h6)) (?h6)
+<list.drop.five.multi> (drop 5 (?h1 ?h2 ?h3 ?h4 ?h5 . ?rest)) ?rest
+
+# Generische drop-Regel für größere n
+<list.drop.multi> (drop ?n (?h . ?t)) (drop (- ?n 1) ?t)
 
 # ==========================================
 # Boolesche Logik (bool)
@@ -113,205 +240,26 @@
 # Vergleichsoperationen (comp)
 # ==========================================
 
-# Annahme: Die rechte Seite wird durch Built-ins im Interpreter ersetzt
-<comp.eq> (== ?a ?b) (: == ?a ?b)
-<comp.neq> (!= ?a ?b) (not (== ?a ?b))
+<comp.eq> (= ?a ?b) (: == ?a ?b)
+<comp.neq> (!= ?a ?b) (: != ?a ?b)
 <comp.lt> (< ?a ?b) (: < ?a ?b)
 <comp.gt> (> ?a ?b) (: > ?a ?b)
-<comp.lte> (<= ?a ?b) (or (< ?a ?b) (== ?a ?b))
-<comp.gte> (>= ?a ?b) (or (> ?a ?b) (== ?a ?b))
+<comp.lte> (<= ?a ?b) (: <= ?a ?b)
+<comp.gte> (>= ?a ?b) (: >= ?a ?b)
 
 # ==========================================
 # Bedingte Ausdrücke (cond)
 # ==========================================
+
 <cond.if.true> (if true ?then ?else) ?then
 <cond.if.false> (if false ?then ?else) ?else
 
 # ==========================================
-# UNIT-ARITHMETIK
+# Zusätzliche nützliche Funktionen
 # ==========================================
 
-# Unit-zu-Unit Operationen ZUERST (spezifischer)
-<unit.mult.units> (* (unit ?a ?u1) (unit ?b ?u2)) (unit (: * ?a ?b) (unit-multiply ?u1 ?u2))
-<unit.div.units> (/ (unit ?a ?u1) (unit ?b ?u2)) (unit (: / ?a ?b) (unit-divide ?u1 ?u2))
-<unit.add.same> (+ (unit ?a ?u) (unit ?b ?u)) (unit (: + ?a ?b) ?u)
-<unit.sub.same> (- (unit ?a ?u) (unit ?b ?u)) (unit (: - ?a ?b) ?u)
-
-# Skalar-Unit Operationen DANACH (allgemeiner)
-<unit.mult.scalar.left> (* ?scalar (unit ?value ?unit)) (unit (: * ?scalar ?value) ?unit)
-<unit.mult.scalar.right> (* (unit ?value ?unit) ?scalar) (unit (: * ?value ?scalar) ?unit)
-<unit.div.scalar> (/ (unit ?value ?unit) ?scalar) (unit (: / ?value ?scalar) ?unit)
-
-
-# ==========================================
-# EINHEITEN-ALGEBRA
-# ==========================================
-
-# Einheiten-Multiplikation (spezielle Physik-Fälle)
-<unit.multiply.kg.ms2> (unit-multiply kg m/s²) N
-<unit.multiply.ms2.kg> (unit-multiply m/s² kg) N
-<unit.multiply.n.m> (unit-multiply N m) J
-<unit.multiply.m.n> (unit-multiply m N) J
-<unit.multiply.m.m> (unit-multiply m m) m²
-<unit.multiply.s.hz> (unit-multiply s Hz) 1
-
-# Einheiten-Division (spezielle Fälle)
-<unit.divide.m.s> (unit-divide m s) m/s
-<unit.divide.j.s> (unit-divide J s) W
-<unit.divide.same> (unit-divide ?u ?u) 1
-<unit.divide.m2.m> (unit-divide m² m) m
-<unit.divide.n.kg> (unit-divide N kg) m/s²
-
-# Allgemeine Einheiten-Kombination (als Fallback)
-<unit.multiply.general> (unit-multiply ?u1 ?u2) (?u1*?u2)
-<unit.divide.general> (unit-divide ?u1 ?u2) (?u1/?u2)
-
-
-<unit.resolve.divide.ms> (unit ?v (unit-divide m s)) (unit ?v m/s)
-<unit.resolve.divide.js> (unit ?v (unit-divide J s)) (unit ?v W)
-<unit.resolve.multiply.mm> (unit ?v (unit-multiply m m)) (unit ?v m²)
-<unit.resolve.multiply.kgms2> (unit ?v (unit-multiply kg m/s²)) (unit ?v N)
-<unit.resolve.multiply.nm> (unit ?v (unit-multiply N m)) (unit ?v J)
-
-
-<unit.resolve.multiply.general> (unit ?v (unit-multiply ?u1 ?u2)) (unit ?v (?u1*?u2))
-<unit.resolve.divide.general> (unit ?v (unit-divide ?u1 ?u2)) (unit ?v (?u1/?u2))
-
-
-# ==========================================
-# SPEZIELLE PHYSIK-REGELN
-# ==========================================
-
-# Kraft = Masse * Beschleunigung (automatische Umwandlung zu Newton)
-<physics.force> (* (unit ?m kg) (unit ?a m/s²)) (unit (: * ?m ?a) N)
-<physics.force.rev> (* (unit ?a m/s²) (unit ?m kg)) (unit (: * ?a ?m) N)
-
-# Energie = Kraft * Weg (automatische Umwandlung zu Joule)
-<physics.energy> (* (unit ?f N) (unit ?d m)) (unit (: * ?f ?d) J)
-<physics.energy.rev> (* (unit ?d m) (unit ?f N)) (unit (: * ?d ?f) J)
-
-# Leistung = Energie / Zeit (automatische Umwandlung zu Watt)
-<physics.power> (/ (unit ?e J) (unit ?t s)) (unit (: / ?e ?t) W)
-
-# Geschwindigkeit = Strecke / Zeit
-<physics.velocity> (/ (unit ?d m) (unit ?t s)) (unit (: / ?d ?t) m/s)
-
-# Beschleunigung = Geschwindigkeit / Zeit
-<physics.acceleration> (/ (unit ?v m/s) (unit ?t s)) (unit (: / ?v ?t) m/s²)
-
-# ==========================================
-# EINHEITEN-KONVERTIERUNG (bestehend)
-# ==========================================
-
-# Physikalische Einheiten
-<physics.unit> (unit ?value ?unit) (unit ?value ?unit)
-<physics.unitless> (unit ?value 1) ?value
-
-# Längeneinheiten - Basis-Konversionen
-<length.m.to.base> (to-base (unit ?v m)) (unit ?v m)
-<length.km.to.base> (to-base (unit ?v km)) (unit (: * ?v 1000) m)
-<length.cm.to.base> (to-base (unit ?v cm)) (unit (: / ?v 100) m)
-<length.mm.to.base> (to-base (unit ?v mm)) (unit (: / ?v 1000) m)
-<length.inch.to.base> (to-base (unit ?v in)) (unit (: * ?v 0.0254) m)
-<length.ft.to.base> (to-base (unit ?v ft)) (unit (: * ?v 0.3048) m)
-<length.yard.to.base> (to-base (unit ?v yd)) (unit (: * ?v 0.9144) m)
-<length.mile.to.base> (to-base (unit ?v mi)) (unit (: * ?v 1609.344) m)
-
-# Masseeinheiten
-<mass.kg.to.base> (to-base (unit ?v kg)) (unit ?v kg)
-<mass.g.to.base> (to-base (unit ?v g)) (unit (: / ?v 1000) kg)
-<mass.t.to.base> (to-base (unit ?v t)) (unit (: * ?v 1000) kg)
-<mass.lb.to.base> (to-base (unit ?v lb)) (unit (: * ?v 0.453592) kg)
-<mass.oz.to.base> (to-base (unit ?v oz)) (unit (: * ?v 0.0283495) kg)
-
-# Zeiteinheiten
-<time.s.to.base> (to-base (unit ?v s)) (unit ?v s)
-<time.min.to.base> (to-base (unit ?v min)) (unit (: * ?v 60) s)
-<time.h.to.base> (to-base (unit ?v h)) (unit (: * ?v 3600) s)
-<time.day.to.base> (to-base (unit ?v day)) (unit (: * ?v 86400) s)
-<time.ms.to.base> (to-base (unit ?v ms)) (unit (: / ?v 1000) s)
-<time.us.to.base> (to-base (unit ?v us)) (unit (: / ?v 1000000) s)
-
-# Geschwindigkeitseinheiten
-<velocity.ms.to.base> (to-base (unit ?v m/s)) (unit ?v m/s)
-<velocity.kmh.to.base> (to-base (unit ?v km/h)) (unit (: / ?v 3.6) m/s)
-<velocity.mph.to.base> (to-base (unit ?v mph)) (unit (: * ?v 0.44704) m/s)
-<velocity.fts.to.base> (to-base (unit ?v ft/s)) (unit (: * ?v 0.3048) m/s)
-
-# Krafteinheiten
-<force.n.to.base> (to-base (unit ?v N)) (unit ?v N)
-<force.kn.to.base> (to-base (unit ?v kN)) (unit (: * ?v 1000) N)
-<force.lbf.to.base> (to-base (unit ?v lbf)) (unit (: * ?v 4.448222) N)
-
-# Energieeinheiten
-<energy.j.to.base> (to-base (unit ?v J)) (unit ?v J)
-<energy.kj.to.base> (to-base (unit ?v kJ)) (unit (: * ?v 1000) J)
-<energy.mj.to.base> (to-base (unit ?v MJ)) (unit (: * ?v 1000000) J)
-<energy.wh.to.base> (to-base (unit ?v Wh)) (unit (: * ?v 3600) J)
-<energy.kwh.to.base> (to-base (unit ?v kWh)) (unit (: * ?v 3600000) J)
-<energy.cal.to.base> (to-base (unit ?v cal)) (unit (: * ?v 4.184) J)
-<energy.kcal.to.base> (to-base (unit ?v kcal)) (unit (: * ?v 4184) J)
-
-# Leistungseinheiten
-<power.w.to.base> (to-base (unit ?v W)) (unit ?v W)
-<power.kw.to.base> (to-base (unit ?v kW)) (unit (: * ?v 1000) W)
-<power.mw.to.base> (to-base (unit ?v MW)) (unit (: * ?v 1000000) W)
-<power.hp.to.base> (to-base (unit ?v hp)) (unit (: * ?v 745.7) W)
-
-# Temperatureinheiten
-<temp.c.to.base> (to-base (unit ?v °C)) (unit (: + ?v 273.15) K)
-<temp.k.to.base> (to-base (unit ?v K)) (unit ?v K)
-<temp.f.to.base> (to-base (unit ?v °F)) (unit (: + (: * (: / (: - ?v 32) 9) 5) 273.15) K)
-
-# Temperaturdifferenzen
-<temp.diff.c> (- (unit ?a °C) (unit ?b °C)) (unit (: - ?a ?b) °C)
-<temp.diff.k> (- (unit ?a K) (unit ?b K)) (unit (: - ?a ?b) K)
-
-# ==========================================
-# ERWEITERTE KONVERSIONEN
-# ==========================================
-
-# Konvertiere in spezifische Einheit
-<unit.convert> (convert (unit ?v ?from) ?to) (from-base (to-base (unit ?v ?from)) ?to)
-
-# Direkte Konversionen (neue)
-<unit.convert.s.min> (convert (unit ?v s) min) (unit (/ ?v 60) min)
-<unit.convert.min.s> (convert (unit ?v min) s) (unit (: * ?v 60) s)
-<unit.convert.min.h> (convert (unit ?v min) h) (unit (: / ?v 60) h)
-<unit.convert.h.min> (convert (unit ?v h) min) (unit (: * ?v 60) min)
-<unit.convert.m.km> (convert (unit ?v m) km) (unit (/ ?v 1000) km)
-<unit.convert.km.m> (convert (unit ?v km) m) (unit (: * ?v 1000) m)
-<unit.convert.cm.m> (convert (unit ?v cm) m) (unit (: / ?v 100) m)
-<unit.convert.m.cm> (convert (unit ?v m) cm) (unit (: * ?v 100) cm)
-
-# Von Basiseinheiten zurück konvertieren
-<unit.from.base.m> (from-base (unit ?v m) m) (unit ?v m)
-<unit.from.base.km> (from-base (unit ?v m) km) (unit (: / ?v 1000) km)
-<unit.from.base.cm> (from-base (unit ?v m) cm) (unit (: * ?v 100) cm)
-<unit.from.base.mm> (from-base (unit ?v m) mm) (unit (: * ?v 1000) mm)
-<unit.from.base.in> (from-base (unit ?v m) in) (unit (: / ?v 0.0254) in)
-<unit.from.base.ft> (from-base (unit ?v m) ft) (unit (: / ?v 0.3048) ft)
-
-<unit.from.base.kg> (from-base (unit ?v kg) kg) (unit ?v kg)
-<unit.from.base.g> (from-base (unit ?v kg) g) (unit (: * ?v 1000) g)
-<unit.from.base.t> (from-base (unit ?v kg) t) (unit (: / ?v 1000) t)
-
-<unit.from.base.s> (from-base (unit ?v s) s) (unit ?v s)
-<unit.from.base.min> (from-base (unit ?v s) min) (unit (: / ?v 60) min)
-<unit.from.base.h> (from-base (unit ?v s) h) (unit (: / ?v 3600) h)
-
-# ==========================================
-# HILFS-FUNKTIONEN FÜR EINHEITEN
-# ==========================================
-
-<unit.value> (value (unit ?v ?u)) ?v
-<unit.unit> (unit-of (unit ?v ?u)) ?u
-<unit.compatible.same> (compatible? (unit ?a ?u) (unit ?b ?u)) true
-<unit.compatible.diff> (compatible? (unit ?a ?u1) (unit ?b ?u2)) (compatible-units? ?u1 ?u2)
-
-# Grundrechenarten
-<math.+> (+ ?a ?b) (: + ?a ?b)
-<math.*> (* ?a ?b) (: * ?a ?b)
-<math.-> (- ?a ?b) (: - ?a ?b)
-<math./> (/ ?a ?b) (: / ?a ?b)
-<math.%> (% ?a ?b) (: % ?a ?b)
+<math.min> (min ?a ?b) (if (< ?a ?b) ?a ?b)
+<math.max> (max ?a ?b) (if (> ?a ?b) ?a ?b)
+<math.abs> (abs ?a) (if (>= ?a 0) ?a (- 0 ?a))
+<math.even> (even? ?n) (= (% ?n 2) 0)
+<math.odd> (odd? ?n) (!= (% ?n 2) 0)

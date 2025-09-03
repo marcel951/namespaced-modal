@@ -9,7 +9,6 @@ public class Evaluator {
                 return evaluateArithmetic(list);
             }
 
-            // NEUE LOGIK: Evaluiere auch Sub-Terme in Listen
             java.util.List<Term> evaluatedElements = new java.util.ArrayList<>();
             boolean changed = false;
 
@@ -47,10 +46,21 @@ public class Evaluator {
         return evaluateBinaryOp(opAtom.value(), evaluatedArg1, evaluatedArg2);
     }
 
-    // ... rest bleibt gleich (evaluateBinaryOp Methode unverändert)
     private static Term evaluateBinaryOp(String op, Term arg1, Term arg2) {
         if (!(arg1 instanceof Term.Atom a1) || !(arg2 instanceof Term.Atom a2)) {
             throw new IllegalArgumentException("Arithmetic arguments must be atoms: " + arg1 + ", " + arg2);
+        }
+
+        switch (op) {
+            case "=" -> {
+                return Term.bool(arg1.equals(arg2));
+            }
+            case "==" -> {
+                return Term.bool(arg1.equals(arg2));
+            }
+            case "!=" -> {
+                return Term.bool(!arg1.equals(arg2));
+            }
         }
 
         if (!a1.isNumber() || !a2.isNumber()) {
@@ -68,16 +78,23 @@ public class Evaluator {
                 if (val2 == 0.0) throw new ArithmeticException("Division by zero");
                 yield val1 / val2;
             }
-            case "%" -> val1 % val2;
+            case "%" -> {
+                if (val2 == 0.0) throw new ArithmeticException("Division by zero");
+                yield val1 % val2;
+            }
+            case "mod" -> {
+                if (val2 == 0.0) throw new ArithmeticException("Division by zero");
+                yield val1 % val2;
+            }
             case ">" -> (val1 > val2) ? 1.0 : 0.0;
             case "<" -> (val1 < val2) ? 1.0 : 0.0;
-            case "==" -> (val1 == val2) ? 1.0 : 0.0;
             case ">=" -> (val1 >= val2) ? 1.0 : 0.0;
             case "<=" -> (val1 <= val2) ? 1.0 : 0.0;
             default -> throw new IllegalArgumentException("Unknown operator: " + op);
         };
 
-        if (op.equals(">") || op.equals("<") || op.equals("==") || op.equals(">=") || op.equals("<=")) {
+
+        if (op.equals(">") || op.equals("<") || op.equals(">=") || op.equals("<=")) {
             return Term.bool(result != 0.0);
         }
 
