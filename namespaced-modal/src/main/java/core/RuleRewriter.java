@@ -25,7 +25,10 @@ public class RuleRewriter {
                 Optional<Map<String, Term>> match = RuleMatcher.match(rule.pattern(), term);
                 if (match.isPresent()) {
                     Term result = RuleMatcher.substitute(rule.replacement(), match.get());
+
+                    // WICHTIG: Sicherstellen dass onRuleApplied aufgerufen wird
                     debugger.onRuleApplied(rule, term, result);
+
                     return Optional.of(result);
                 }
             }

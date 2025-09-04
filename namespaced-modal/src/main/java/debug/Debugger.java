@@ -40,10 +40,17 @@ public class Debugger {
 
     public void onRuleApplied(Rule rule, Term before, Term after) {
         switch (mode) {
-            case DEBUG -> System.out.println("Applied " + rule.fullName() + ": " + before + " -> " + after);
-            case TRACE -> System.out.println("Rule " + rule.fullName() + ": " + before + " -> " + after);
+            case DEBUG -> {
+                // KORRIGIERT: Regel-Namespace und -Name anzeigen
+                System.out.println("Applied " + rule.fullName() + ": " + before + " -> " + after);
+            }
+            case TRACE -> {
+                // KORRIGIERT: Regel-Namespace und -Name anzeigen
+                System.out.println("Rule " + rule.fullName() + ": " + before + " -> " + after);
+            }
             case STEP_BY_STEP -> {
                 if (!runToEnd) {
+                    // KORRIGIERT: Regel-Namespace und -Name anzeigen
                     System.out.println("Rule " + rule.fullName() + ": " + before + " -> " + after);
                     System.out.print("Continue? (y/n/r): ");
                     try {
