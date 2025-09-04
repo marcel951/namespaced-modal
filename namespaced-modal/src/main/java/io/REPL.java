@@ -7,18 +7,19 @@ import debug.Debugger;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import core.TermEvaluator;
 
 public class REPL {
     private final RuleSet ruleSet;
     private final BufferedReader reader;
     private Debugger debugger;
-    private final UnifiedInterpreter interpreter; // ← HINZUFÜGEN: Member Variable
+    private TermEvaluator evaluator;
 
     public REPL(RuleSet ruleSet) {
         this.ruleSet = ruleSet;
         this.reader = new BufferedReader(new InputStreamReader(System.in));
         this.debugger = new Debugger(Debugger.Mode.QUIET);
-        this.interpreter = new UnifiedInterpreter(ruleSet, debugger); // ← HINZUFÜGEN: Initialisierung
+        this.evaluator = new TermEvaluator(ruleSet, debugger);
     }
 
 
@@ -125,6 +126,8 @@ public class REPL {
         try {
             Debugger.Mode newMode = Debugger.Mode.valueOf(mode.toUpperCase().replace("-", "_"));
             debugger = new Debugger(newMode);
+            evaluator = new TermEvaluator(ruleSet, debugger);
+
             System.out.println("Mode set to: " + mode);
         } catch (IllegalArgumentException e) {
             System.out.println("Invalid mode: " + mode);
@@ -170,7 +173,7 @@ public class REPL {
             System.out.println("DEBUG: Evaluating: " + term);
         }
 
-        Term result = interpreter.evaluate(term);
+        Term result = evaluator.evaluate(term);
 
         if (debugger.getMode() == Debugger.Mode.DEBUG) {
             System.out.println("DEBUG: Result: " + result);

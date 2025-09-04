@@ -44,7 +44,6 @@ public class DynamicRuleParser {
             return parseAddRule(addMatcher);
         }
 
-
         Matcher removeMatcher = REMOVE_RULE_PATTERN.matcher(input);
         if (removeMatcher.matches()) {
             return parseRemoveRule(removeMatcher);
