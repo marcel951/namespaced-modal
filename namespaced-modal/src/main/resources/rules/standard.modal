@@ -1,5 +1,5 @@
 # ==========================================
-# Mathematische Operationen - RICHTIGE REIHENFOLGE!
+# Mathematische Operationen
 # ==========================================
 
 # Grundrechenarten
@@ -9,7 +9,6 @@
 <math./> (/ ?a ?b) (: / ?a ?b)
 <math.%> (% ?a ?b) (: % ?a ?b)
 
-# WICHTIG: Base Cases ZUERST, dann generische Regel!
 # Fakultät - Base Cases haben Priorität
 <math.fact.0> (fact 0) 1
 <math.fact.1> (fact 1) 1
@@ -41,6 +40,13 @@
 # cons - List Construction
 <list.cons> (cons ?elem ?list) (?elem . ?list)
 
+# List Constructor
+<list.empty> (list) ()
+<list.single> (list ?a) (?a)
+<list.pair> (list ?a ?b) (?a . (?b))
+<list.triple> (list ?a ?b ?c) (?a . (?b . (?c)))
+<list.cons.build> (list ?head . ?tail) (?head . (apply list ?tail))
+
 # append - List Concatenation
 <list.append.empty.left> (append () ?list) ?list
 <list.append> (append (?head . ?tail) ?list) (cons ?head (append ?tail ?list))
@@ -49,6 +55,8 @@
 <list.reverse> (reverse ?list) (reverse-helper ?list ())
 <list.reverse.helper.empty> (reverse-helper () ?acc) ?acc
 <list.reverse.helper> (reverse-helper (?head . ?tail) ?acc) (reverse-helper ?tail (cons ?head ?acc))
+
+
 
 # ==========================================
 # Boolesche Logik
@@ -143,3 +151,59 @@
 # String-ähnliche Operationen (wenn Sie Strings als Listen behandeln)
 <string.concat.empty> (concat ()) ()
 <string.concat> (concat ((?head . ?tail) . ?rest)) (append ?head (concat ?rest))
+
+# ==========================================
+# Einheiten normalisieren
+# ==========================================
+
+# Länge
+<unit.length.mm.to.m> (to-meter (mm ?x)) (/ ?x 1000)
+<unit.length.cm.to.m> (to-meter (cm ?x)) (/ ?x 100)
+<unit.length.m.to.m> (to-meter (m ?x)) ?x
+<unit.length.km.to.m> (to-meter (km ?x)) (* ?x 1000)
+
+# Masse
+<unit.mass.g.to.kg> (to-kg (g ?x)) (/ ?x 1000)
+<unit.mass.kg.to.kg> (to-kg (kg ?x)) ?x
+<unit.mass.t.to.kg> (to-kg (t ?x)) (* ?x 1000)
+
+# Zeit
+<unit.time.ms.to.s> (to-seconds (ms ?x)) (/ ?x 1000)
+<unit.time.s.to.s> (to-seconds (s ?x)) ?x
+<unit.time.min.to.s> (to-seconds (min ?x)) (* ?x 60)
+<unit.time.h.to.s> (to-seconds (h ?x)) (* ?x 3600)
+
+# Geschwindigkeit in m pro s
+<unit.speed.kmh.to.mps> (to-mps (kmh ?v)) (/ (* ?v 1000) 3600)
+<unit.speed.mps.to.mps> (to-mps (mps ?v)) ?v
+
+# Beschleunigung in m pro s^2
+<unit.acc.mps2.to.mps2> (to-mps2 (mps2 ?a)) ?a
+
+# ==========================================
+# Konstanten in Namespaces
+# ==========================================
+
+# Standard Schwerebeschleunigung nach WGS84
+<physics.constants.si.g> (si:g) 9.80665
+
+# Schulnah gerundet
+<physics.constants.school.g> (school:g) 9.81
+
+# ==========================================
+# Physik mit Einheiten
+# ==========================================
+
+# Kraft aus Masse und Beschleunigung
+<physics.force.u> (force-u ?mass ?acc) (* (to-kg ?mass) (to-mps2 ?acc))
+
+# Geschwindigkeit aus Strecke und Zeit
+<physics.velocity.u> (velocity-u ?dist ?time) (/ (to-meter ?dist) (to-seconds ?time))
+
+# Arbeit aus Kraft und Strecke
+<physics.work.u> (work-u ?force ?dist) (* ?force (to-meter ?dist))
+
+# Bremsweg aus Geschwindigkeit und Reibbeiwert in zwei Varianten
+<physics.brake.si> (brake-distance.si ?speed ?mu) (/ (square (to-mps ?speed)) (* (* 2 ?mu) (si:g)))
+<physics.brake.school> (brake-distance.school ?speed ?mu) (/ (square (to-mps ?speed)) (* (* 2 ?mu) (school:g)))
+

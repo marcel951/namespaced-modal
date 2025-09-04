@@ -164,7 +164,7 @@ public sealed interface Term permits Term.Atom, Term.List, Term.Cons {
         if (value == (int) value) {
             return new Atom(String.valueOf((int) value));
         } else {
-            return new Atom(String.format("%.6g", value));
+            return new Atom(String.format(java.util.Locale.ROOT, "%.6g", value));
         }
     }
 
