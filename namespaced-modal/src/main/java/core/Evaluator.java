@@ -1,6 +1,31 @@
 package core;
 
-public class SpecialOperatorEvaluator {
+import java.util.HashMap;
+import java.util.Map;
+
+public class Evaluator {
+
+    private final Map<Term, Term> evaluationCache = new HashMap<>();
+
+    public static class Thunk {
+        private final Term expression;
+        private final TermEvaluator evaluator;
+        private Term cachedResult = null;
+        private boolean evaluated = false;
+
+        public Thunk(Term expression, TermEvaluator evaluator) {
+            this.expression = expression;
+            this.evaluator = evaluator;
+        }
+
+        public Term force() {
+            if (!evaluated) {
+                cachedResult = evaluator.evaluate(expression);
+                evaluated = true;
+            }
+            return cachedResult;
+        }
+    }
 
     public boolean isSpecialOperator(String operator) {
         return switch (operator) {
@@ -11,18 +36,25 @@ public class SpecialOperatorEvaluator {
     }
 
     public Term evaluate(Term.List list, TermEvaluator evaluator) {
+        if (evaluationCache.containsKey(list)) {
+            return evaluationCache.get(list);
+        }
+
         String funcSymbol = list.getFunctionSymbol();
 
-        return switch (funcSymbol) {
-            case ":" -> evaluateArithmetic(list, evaluator);
-            case "if" -> evaluateIf(list, evaluator);
+        Term result = switch (funcSymbol) {
+            case ":" -> evaluateArithmeticLazy(list, evaluator);
+            case "if" -> evaluateIfLazy(list, evaluator);
             case "+", "-", "*", "/", "%", ">", "<", ">=", "<=", "=", "!=" ->
-                    evaluateInfixOperator(list, evaluator);
+                    evaluateInfixOperatorLazy(list, evaluator);
             default -> throw new IllegalArgumentException("Not a special operator: " + funcSymbol);
         };
+
+        evaluationCache.put(list, result);
+        return result;
     }
 
-    private Term evaluateIf(Term.List list, TermEvaluator evaluator) {
+    private Term evaluateIfLazy(Term.List list, TermEvaluator evaluator) {
         if (list.elements().size() != 4) {
             throw new IllegalArgumentException("if requires (if condition then else)");
         }
@@ -31,46 +63,64 @@ public class SpecialOperatorEvaluator {
 
         if (condition instanceof Term.Atom atom && atom.isBoolean()) {
             if (atom.asBoolean()) {
-                return evaluator.evaluate(list.elements().get(2)); // then
+                // Lazy: Nur den then-Zweig auswerten
+                return evaluator.evaluate(list.elements().get(2));
             } else {
-                return evaluator.evaluate(list.elements().get(3)); // else
+                // Lazy: Nur den else-Zweig auswerten
+                return evaluator.evaluate(list.elements().get(3));
             }
         }
 
         throw new IllegalArgumentException("if condition must be boolean, got: " + condition);
     }
 
-    private Term evaluateInfixOperator(Term.List list, TermEvaluator evaluator) {
+    private Term evaluateInfixOperatorLazy(Term.List list, TermEvaluator evaluator) {
         if (list.elements().size() != 3) {
             throw new IllegalArgumentException("Binary operator requires 2 arguments");
         }
 
         String op = list.getFunctionSymbol();
-        Term arg1 = evaluator.evaluate(list.elements().get(1));
-        Term arg2 = evaluator.evaluate(list.elements().get(2));
+
+        Thunk arg1Thunk = new Thunk(list.elements().get(1), evaluator);
+        Thunk arg2Thunk = new Thunk(list.elements().get(2), evaluator);
 
         Term colonExpr = new Term.List(
                 Term.atom(":"),
                 Term.atom(op),
-                arg1,
-                arg2
+                Term.atom("thunk1"),
+                Term.atom("thunk2")
         );
 
-        return evaluateArithmetic((Term.List) colonExpr, evaluator);
+        return evaluateArithmeticWithThunks((Term.List) colonExpr, arg1Thunk, arg2Thunk);
     }
 
-    private Term evaluateArithmetic(Term.List list, TermEvaluator evaluator) {
+    private Term evaluateArithmeticLazy(Term.List list, TermEvaluator evaluator) {
         if (list.elements().size() != 4) {
             throw new IllegalArgumentException("Arithmetic requires (: op arg1 arg2)");
         }
 
         Term operator = list.elements().get(1);
-        Term arg1 = evaluator.evaluate(list.elements().get(2));
-        Term arg2 = evaluator.evaluate(list.elements().get(3));
+
+        // Erstelle Thunks für die Argumente
+        Thunk arg1Thunk = new Thunk(list.elements().get(2), evaluator);
+        Thunk arg2Thunk = new Thunk(list.elements().get(3), evaluator);
 
         if (!(operator instanceof Term.Atom opAtom)) {
             throw new IllegalArgumentException("Operator must be atom");
         }
+
+        return evaluateArithmeticWithThunks(list, arg1Thunk, arg2Thunk);
+    }
+
+    private Term evaluateArithmeticWithThunks(Term.List list, Thunk arg1Thunk, Thunk arg2Thunk) {
+        Term operator = list.elements().get(1);
+
+        if (!(operator instanceof Term.Atom opAtom)) {
+            throw new IllegalArgumentException("Operator must be atom");
+        }
+
+        Term arg1 = arg1Thunk.force();
+        Term arg2 = arg2Thunk.force();
 
         if (!(arg1 instanceof Term.Atom a1) || !(arg2 instanceof Term.Atom a2)) {
             throw new IllegalArgumentException("Args must be atoms: " + arg1 + ", " + arg2);

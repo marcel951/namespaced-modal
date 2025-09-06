@@ -6,12 +6,12 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class SpecialOperatorEvaluatorTest {
-    private SpecialOperatorEvaluator evaluator;
+    private Evaluator evaluator;
     private TermEvaluator mockEvaluator;
 
     @BeforeEach
     public void setUp() {
-        evaluator = new SpecialOperatorEvaluator();
+        evaluator = new Evaluator();
         // Create a simple mock evaluator that just returns atoms unchanged
         mockEvaluator = new TermEvaluator(new RuleSet(), new debug.Debugger(debug.Debugger.Mode.QUIET)) {
             @Override

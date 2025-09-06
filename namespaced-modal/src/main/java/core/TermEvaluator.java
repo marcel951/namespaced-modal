@@ -5,7 +5,7 @@ import java.util.*;
 
 public class TermEvaluator {
     private final RuleRewriter rewriter;
-    private final SpecialOperatorEvaluator specialEvaluator;
+    private final Evaluator specialEvaluator;
     private final Debugger debugger;
 
     private final Map<Term, Term> memoCache = new HashMap<>();
@@ -13,7 +13,7 @@ public class TermEvaluator {
 
     public TermEvaluator(RuleSet ruleSet, Debugger debugger) {
         this.rewriter = new RuleRewriter(ruleSet, debugger);
-        this.specialEvaluator = new SpecialOperatorEvaluator();
+        this.specialEvaluator = new Evaluator();
         this.debugger = debugger;
     }
 
